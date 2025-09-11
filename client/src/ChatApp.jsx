@@ -106,7 +106,7 @@ export default function ChatApp() {
         };
         
         setMessages(prev => [...prev, tempAiMessage]);
-        
+        let accumulatedResponse = '';
         // Generate streaming response with enhanced error handling
         const fullResponse = await generateGeminiStreamResponse(
           currentInput, 
@@ -132,13 +132,13 @@ export default function ChatApp() {
             }
             
             if (chunk) {
-              // Update streaming response with new chunk
-              setStreamingResponse(prev => prev + chunk);
+              accumulatedResponse += chunk;
+              setStreamingResponse(accumulatedResponse);
               setMessages(prev => {
                 const newMessages = [...prev];
                 const lastMessage = newMessages[newMessages.length - 1];
                 if (lastMessage.isStreaming) {
-                  lastMessage.text = (lastMessage.text || '') + chunk;
+                  lastMessage.text = accumulatedResponse;
                 }
                 return newMessages;
               });

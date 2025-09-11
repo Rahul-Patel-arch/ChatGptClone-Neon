@@ -79,12 +79,14 @@ export default function ChatArea({
                   )}
                 </>
               ) : (
-                <MarkdownMessage darkMode={darkMode}>
-                  {msg.text}
+                <>
+                  <MarkdownMessage darkMode={darkMode}>
+                    {typeof msg.text === 'string' ? msg.text : String(msg.text)}
+                  </MarkdownMessage>
                   {msg.isStreaming && (
                     <span className="typing-cursor">|</span>
                   )}
-                </MarkdownMessage>
+                </>
               )}
             </div>
             <div className={`small mt-1 ${
