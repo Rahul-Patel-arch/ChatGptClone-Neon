@@ -1,0 +1,121 @@
+
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* CSS Custom Properties for Settings Panel */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-hover: #f3f4f6;
+  --bg-disabled: #f3f4f6;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-disabled: #9ca3af;
+  --text-placeholder: #9ca3af;
+  --border-color: #e5e7eb;
+  --primary-color: #3b82f6;
+  --primary-dark: #2563eb;
+  --primary-light: #eff6ff;
+}
+
+/* Dark mode CSS variables */
+[data-theme="dark"] {
+  --bg-primary: #1f2937;
+  --bg-secondary: #374151;
+  --bg-hover: #4b5563;
+  --bg-disabled: #4b5563;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-disabled: #9ca3af;
+  --text-placeholder: #6b7280;
+  --border-color: #4b5563;
+  --primary-color: #60a5fa;
+  --primary-dark: #3b82f6;
+  --primary-light: #1e3a8a;
+}
+
+/* Custom styles to maintain the same appearance */
+.gradient-bg {
+  background: linear-gradient(135deg, #f1f5f9 0%, #ffffff 50%, #faf5ff 100%);
+}
+
+.dark .gradient-bg {
+  background: linear-gradient(135deg, #0f172a 0%, #020617 50%, #000000 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(to right, #2563eb, #9333ea);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.backdrop-blur {
+  backdrop-filter: blur(12px);
+}
+
+.transition-colors {
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+/* Dark mode overrides for Bootstrap classes */
+.dark {
+  color: #f1f5f9 !important;
+}
+
+.dark .bg-light {
+  background-color: #1e293b !important;
+}
+
+.dark .bg-white {
+  background-color: #1e293b !important;
+}
+
+.dark .bg-secondary {
+  background-color: #374151 !important;
+}
+
+.dark .text-dark {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-muted {
+  color: #9ca3af !important;
+}
+
+.dark .border-light {
+  border-color: #374151 !important;
+}
+
+.dark .border-secondary {
+  border-color: #6b7280 !important;
+}
+
+.dark .form-control {
+  background-color: #374151 !important;
+  border-color: #6b7280 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark .form-control::placeholder {
+  color: #9ca3af !important;
+}
+
+.dark .btn-outline-secondary {
+  border-color: #6b7280 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark .btn-outline-secondary:hover {
+  background-color: #374151 !important;
+  border-color: #6b7280 !important;
+}
+
+.dark .btn-outline-light {
+  border-color: #6b7280 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark .btn-outline-light:hover {
+  background-color: #374151 !important;
+  border-color: #6b7280 !important;
+}
