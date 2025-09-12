@@ -305,16 +305,16 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                 >
                   <img 
                     src={gptIcon} 
-                    alt="ChatClone Logo" 
+                    alt="QuantumChat Logo" 
                     style={{width: '120px', height: '120px'}} 
                     className="mb-4"
                   />
                   <h1 className="display-4 fw-bold mb-3" style={{
-                    color: '#64748b',
+                    color: '#2d3436',
                     fontWeight: '700'
-                  }}>ChatClone</h1>
+                  }}>QuantumChat</h1>
                   <p className="lead mb-4" style={{
-                    color: '#64748b',
+                    color: '#636e72',
                     fontWeight: '400'
                   }}>
                     Enterprise-grade AI platform delivering intelligent conversational experiences through cutting-edge language models
@@ -325,10 +325,10 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                         <div className="rounded-circle p-2 d-flex align-items-center justify-content-center" style={{
                           width: '40px', 
                           height: '40px',
-                          background: 'rgba(100, 116, 139, 0.15)',
-                          border: '1px solid rgba(100, 116, 139, 0.2)'
+                          background: 'rgba(183, 177, 242, 0.15)',
+                          border: '1px solid rgba(183, 177, 242, 0.3)'
                         }}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#64748b">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#6c5ce7">
                             <path d="M12 2L2 7L12 12L22 7L12 2Z" opacity="0.8"/>
                             <path d="M2 17L12 22L22 17"/>
                             <path d="M2 12L12 17L22 12"/>
@@ -336,11 +336,11 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                         </div>
                         <div>
                           <div className="fw-semibold" style={{
-                            color: '#475569',
+                            color: '#2d3436',
                             fontWeight: '600'
                           }}>Advanced AI Technology</div>
                           <small style={{
-                            color: '#64748b',
+                            color: '#636e72',
                             fontWeight: '400'
                           }}>Next-generation language processing capabilities</small>
                         </div>
@@ -349,20 +349,20 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                         <div className="rounded-circle p-2 d-flex align-items-center justify-content-center" style={{
                           width: '40px', 
                           height: '40px',
-                          background: 'rgba(100, 116, 139, 0.15)',
-                          border: '1px solid rgba(100, 116, 139, 0.2)'
+                          background: 'rgba(253, 183, 234, 0.15)',
+                          border: '1px solid rgba(253, 183, 234, 0.3)'
                         }}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#64748b">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#6c5ce7">
                             <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z"/>
                           </svg>
                         </div>
                         <div>
                           <div className="fw-semibold" style={{
-                            color: '#475569',
+                            color: '#2d3436',
                             fontWeight: '600'
                           }}>Intelligent Conversations</div>
                           <small style={{
-                            color: '#64748b',
+                            color: '#636e72',
                             fontWeight: '400'
                           }}>Context-aware dialogue with natural language understanding</small>
                         </div>
@@ -371,21 +371,21 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                         <div className="rounded-circle p-2 d-flex align-items-center justify-content-center" style={{
                           width: '40px', 
                           height: '40px',
-                          background: 'rgba(100, 116, 139, 0.15)',
-                          border: '1px solid rgba(100, 116, 139, 0.2)'
+                          background: 'rgba(255, 220, 204, 0.15)',
+                          border: '1px solid rgba(255, 220, 204, 0.3)'
                         }}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#64748b">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#6c5ce7">
                             <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/>
-                            <path d="M9 12L11 14L15 10" stroke="#64748b" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M9 12L11 14L15 10" stroke="#6c5ce7" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </div>
                         <div>
                           <div className="fw-semibold" style={{
-                            color: '#475569',
+                            color: '#2d3436',
                             fontWeight: '600'
                           }}>Enterprise Security</div>
                           <small style={{
-                            color: '#64748b',
+                            color: '#636e72',
                             fontWeight: '400'
                           }}>End-to-end encryption with privacy-first architecture</small>
                         </div>
@@ -412,8 +412,13 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                   <button
                     onClick={toggleDarkMode}
                     className={`btn btn-sm rounded-3 ${
-                      darkMode ? 'btn-outline-light' : 'btn-outline-secondary'
+                      darkMode ? 'btn-outline-light' : 'btn-outline-primary'
                     }`}
+                    style={{
+                      border: darkMode ? '1px solid rgba(255, 255, 255, 0.5)' : '1px solid #7c73e6',
+                      color: darkMode ? 'white' : '#7c73e6',
+                      padding: '6px 10px'
+                    }}
                   >
                     {darkMode ? <Sun size={16} /> : <Moon size={16} />}
                   </button>
@@ -430,8 +435,13 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                         : (darkMode ? 'text-white' : 'text-dark')
                     }`}
                     style={{
-                      background: isLoginView ? 'linear-gradient(to right, #3b82f6, #8b5cf6)' : 'none',
-                      border: 'none'
+                      background: isLoginView 
+                        ? (darkMode ? 'var(--primary-color)' : '#7c73e6') 
+                        : (darkMode ? 'var(--bg-secondary)' : '#f5f5f5'),
+                      border: isLoginView ? 'none' : (darkMode ? '1px solid var(--border-color)' : '1px solid #e0e0e0'),
+                      color: isLoginView ? 'white' : (darkMode ? 'var(--text-primary)' : '#555'),
+                      fontWeight: '600',
+                      boxShadow: isLoginView ? (darkMode ? 'none' : '0 2px 4px rgba(124, 115, 230, 0.15)') : 'none'
                     }}
                     onClick={() => switchView('login')}
                   >
@@ -444,8 +454,13 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                         : (darkMode ? 'text-white' : 'text-dark')
                     }`}
                     style={{
-                      background: !isLoginView ? 'linear-gradient(to right, #3b82f6, #8b5cf6)' : 'none',
-                      border: 'none'
+                      background: !isLoginView 
+                        ? (darkMode ? 'var(--primary-color)' : '#7c73e6') 
+                        : (darkMode ? 'var(--bg-secondary)' : '#f5f5f5'),
+                      border: !isLoginView ? 'none' : (darkMode ? '1px solid var(--border-color)' : '1px solid #e0e0e0'),
+                      color: !isLoginView ? 'white' : (darkMode ? 'var(--text-primary)' : '#555'),
+                      fontWeight: '600',
+                      boxShadow: !isLoginView ? (darkMode ? 'none' : '0 2px 4px rgba(124, 115, 230, 0.15)') : 'none'
                     }}
                     onClick={() => switchView('signup')}
                   >
@@ -651,10 +666,13 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
-                    className="btn text-white w-100 py-3 fw-bold rounded-3 mb-3"
+                    className="btn w-100 py-3 fw-bold rounded-3 mb-3"
                     style={{
-                      background: 'linear-gradient(to right, #3b82f6, #8b5cf6)',
-                      border: 'none'
+                      background: darkMode ? 'var(--primary-color)' : '#7c73e6', // Darker in light mode
+                      border: 'none',
+                      color: 'white',
+                      boxShadow: darkMode ? 'var(--shadow-light)' : '0 4px 6px rgba(124, 115, 230, 0.25)',
+                      fontWeight: '600'
                     }}
                     disabled={isLoading}
                   >
@@ -680,9 +698,16 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                 <div className="d-flex justify-content-center gap-3 mb-4">
                   <button
                     className={`btn rounded-circle ${
-                      darkMode ? 'btn-outline-light' : 'btn-outline-secondary'
+                      darkMode ? 'btn-outline-light' : 'btn-outline-primary'
                     }`}
-                    style={{ width: '50px', height: '50px' }}
+                    style={{ 
+                      width: '50px', 
+                      height: '50px',
+                      border: darkMode ? '1px solid rgba(255, 255, 255, 0.5)' : '2px solid #6c5ce7',
+                      color: darkMode ? 'white' : '#6c5ce7',
+                      fontWeight: '600',
+                      boxShadow: darkMode ? 'none' : '0 2px 4px rgba(108, 92, 231, 0.15)'
+                    }}
                     onClick={() => handleSocialLogin('Google')}
                     title="Continue with Google"
                   >
@@ -690,9 +715,16 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                   </button>
                   <button
                     className={`btn rounded-circle ${
-                      darkMode ? 'btn-outline-light' : 'btn-outline-secondary'
+                      darkMode ? 'btn-outline-light' : 'btn-outline-primary'
                     }`}
-                    style={{ width: '50px', height: '50px' }}
+                    style={{ 
+                      width: '50px', 
+                      height: '50px',
+                      border: darkMode ? '1px solid rgba(255, 255, 255, 0.5)' : '2px solid #6c5ce7',
+                      color: darkMode ? 'white' : '#6c5ce7',
+                      fontWeight: '600',
+                      boxShadow: darkMode ? 'none' : '0 2px 4px rgba(108, 92, 231, 0.15)'
+                    }}
                     onClick={() => handleSocialLogin('Microsoft')}
                     title="Continue with Microsoft"
                   >
@@ -700,9 +732,16 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                   </button>
                   <button
                     className={`btn rounded-circle ${
-                      darkMode ? 'btn-outline-light' : 'btn-outline-secondary'
+                      darkMode ? 'btn-outline-light' : 'btn-outline-primary'
                     }`}
-                    style={{ width: '50px', height: '50px' }}
+                    style={{ 
+                      width: '50px', 
+                      height: '50px',
+                      border: darkMode ? '1px solid rgba(255, 255, 255, 0.5)' : '2px solid #6c5ce7',
+                      color: darkMode ? 'white' : '#6c5ce7',
+                      fontWeight: '600',
+                      boxShadow: darkMode ? 'none' : '0 2px 4px rgba(108, 92, 231, 0.15)'
+                    }}
                     onClick={() => handleSocialLogin('Apple')}
                     title="Continue with Apple"
                   >
@@ -712,11 +751,15 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
 
                 {/* Switch Auth */}
                 <div className="text-center">
-                  <span className="small">
+                  <span className={`small ${darkMode ? 'text-light' : 'text-dark'}`}>
                     {isLoginView ? "Don't have an account? " : "Already have an account? "}
                     <button
                       type="button"
                       className="btn btn-link p-0 text-decoration-none"
+                      style={{
+                        color: darkMode ? '#a593ff' : '#6c5ce7',
+                        fontWeight: '600'
+                      }}
                       onClick={() => switchView(isLoginView ? 'signup' : 'login')}
                     >
                       {isLoginView ? 'Sign Up' : 'Log In'}

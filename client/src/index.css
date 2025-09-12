@@ -1,52 +1,104 @@
 
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
-/* CSS Custom Properties for Settings Panel */
+/* Modal animations */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* CSS Custom Properties - Clean Single Color Theme */
 :root {
   --bg-primary: #ffffff;
-  --bg-secondary: #f9fafb;
-  --bg-hover: #f3f4f6;
-  --bg-disabled: #f3f4f6;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --text-disabled: #9ca3af;
-  --text-placeholder: #9ca3af;
-  --border-color: #e5e7eb;
-  --primary-color: #3b82f6;
-  --primary-dark: #2563eb;
-  --primary-light: #eff6ff;
+  --bg-secondary: #f8f7fc;
+  --bg-hover: #f0effa;
+  --bg-disabled: #f5f5f5;
+  --text-primary: #2d2d2d;
+  --text-secondary: #666666;
+  --text-disabled: #999999;
+  --text-placeholder: #aaaaaa;
+  --border-color: #e8e7f3;
+  --primary-color: #B7B1F2;
+  --primary-dark: #a59de8;
+  --primary-light: #f0efff;
+  --accent-color: #B7B1F2;
+  --success-color: #42b883;
+  --warning-color: #f39c12;
+  --error-color: #e74c3c;
+  --shadow-light: 0 2px 4px rgba(183, 177, 242, 0.08);
+  --shadow-medium: 0 4px 8px rgba(183, 177, 242, 0.12);
+  --sidebar-bg: #B7B1F2;
+  --sidebar-hover: rgba(255, 255, 255, 0.1);
 }
 
-/* Dark mode CSS variables */
-[data-theme="dark"] {
-  --bg-primary: #1f2937;
-  --bg-secondary: #374151;
-  --bg-hover: #4b5563;
-  --bg-disabled: #4b5563;
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
-  --text-disabled: #9ca3af;
-  --text-placeholder: #6b7280;
-  --border-color: #4b5563;
-  --primary-color: #60a5fa;
-  --primary-dark: #3b82f6;
-  --primary-light: #1e3a8a;
+/* Light theme explicit (fallback) */
+html[data-theme="light"], 
+html.light, 
+body.light, 
+:root[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f7fc;
+  --bg-hover: #f0effa;
+  --bg-disabled: #f5f5f5;
+  --text-primary: #2d2d2d;
+  --text-secondary: #666666;
+  --text-disabled: #999999;
+  --text-placeholder: #aaaaaa;
+  --border-color: #e8e7f3;
+  --primary-color: #B7B1F2;
+  --primary-dark: #a59de8;
+  --primary-light: #f0efff;
+  --accent-color: #B7B1F2;
+  --sidebar-bg: #B7B1F2;
+  --sidebar-hover: rgba(255, 255, 255, 0.1);
+  --shadow-light: 0 2px 4px rgba(183, 177, 242, 0.08);
+  --shadow-medium: 0 4px 8px rgba(183, 177, 242, 0.12);
 }
 
-/* Custom styles to maintain the same appearance */
+/* Dark theme overrides */
+html[data-theme="dark"], 
+html.dark, 
+body.dark, 
+:root[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #242424;
+  --bg-hover: #333333;
+  --bg-disabled: #404040;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-disabled: #666666;
+  --text-placeholder: #999999;
+  --border-color: #404040;
+  --primary-color: #4F46E5;
+  --primary-dark: #3730A3;
+  --primary-light: #312e81;
+  --accent-color: #4F46E5;
+  --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --sidebar-bg: #4a5568;
+  --sidebar-hover: rgba(255, 255, 255, 0.05);
+}
+
+/* Custom styles - Clean single color professional */
 .gradient-bg {
-  background: linear-gradient(135deg, #f1f5f9 0%, #ffffff 50%, #faf5ff 100%);
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
 }
 
 .dark .gradient-bg {
-  background: linear-gradient(135deg, #0f172a 0%, #020617 50%, #000000 100%);
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
 }
 
 .gradient-text {
-  background: linear-gradient(to right, #2563eb, #9333ea);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--primary-color) !important;
+  font-weight: 500;
 }
 
 .backdrop-blur {
@@ -57,65 +109,110 @@
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
-/* Dark mode overrides for Bootstrap classes */
+/* Dark mode overrides for Bootstrap classes - Professional dark theme */
 .dark {
-  color: #f1f5f9 !important;
+  color: #e8e8e8 !important;
 }
 
 .dark .bg-light {
-  background-color: #1e293b !important;
+  background-color: #2d2d2d !important;
 }
 
 .dark .bg-white {
-  background-color: #1e293b !important;
+  background-color: #1a1a1a !important;
 }
 
 .dark .bg-secondary {
-  background-color: #374151 !important;
+  background-color: #2d2d2d !important;
 }
 
 .dark .text-dark {
-  color: #f1f5f9 !important;
+  color: #e8e8e8 !important;
 }
 
 .dark .text-muted {
-  color: #9ca3af !important;
+  color: #b0b0b0 !important;
 }
 
 .dark .border-light {
-  border-color: #374151 !important;
+  border-color: #404040 !important;
 }
 
 .dark .border-secondary {
-  border-color: #6b7280 !important;
+  border-color: #404040 !important;
 }
 
 .dark .form-control {
-  background-color: #374151 !important;
-  border-color: #6b7280 !important;
-  color: #f1f5f9 !important;
+  background-color: #2d2d2d !important;
+  border-color: #404040 !important;
+  color: #e8e8e8 !important;
 }
 
 .dark .form-control::placeholder {
-  color: #9ca3af !important;
+  color: #888888 !important;
 }
 
 .dark .btn-outline-secondary {
-  border-color: #6b7280 !important;
-  color: #f1f5f9 !important;
+  border-color: #404040 !important;
+  color: #e8e8e8 !important;
 }
 
 .dark .btn-outline-secondary:hover {
-  background-color: #374151 !important;
-  border-color: #6b7280 !important;
+  background-color: #3a3a3a !important;
+  border-color: #404040 !important;
 }
 
 .dark .btn-outline-light {
-  border-color: #6b7280 !important;
-  color: #f1f5f9 !important;
+  border-color: #404040 !important;
+  color: #e8e8e8 !important;
 }
 
 .dark .btn-outline-light:hover {
-  background-color: #374151 !important;
-  border-color: #6b7280 !important;
+  background-color: #3a3a3a !important;
+  border-color: #404040 !important;
+}
+
+/* Typing Animation Styles */
+.typing-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.typing-indicator span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.typing-cursor {
+  animation: blink 1s infinite;
+  color: #6c757d;
+  margin-left: 2px;
+}
+
+@keyframes typing {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
 }

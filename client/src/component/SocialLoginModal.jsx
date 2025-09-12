@@ -32,10 +32,10 @@ export default function SocialLoginModal({ provider, darkMode, onClose, onSucces
 
   const getProviderColor = () => {
     switch (provider) {
-      case 'Google': return '#db4437';
-      case 'Microsoft': return '#0078d4';
-      case 'Apple': return '#000';
-      default: return '#6c757d';
+      case 'Google': return '#fef4fc';
+      case 'Microsoft': return '#f4f2ff';
+      case 'Apple': return '#fff7f3';
+      default: return '#fffcf5';
     }
   };
 
@@ -58,8 +58,8 @@ export default function SocialLoginModal({ provider, darkMode, onClose, onSucces
           className="modal-backdrop show"
           onClick={onClose}
           style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(10px)'
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(8px)'
           }}
         />
         

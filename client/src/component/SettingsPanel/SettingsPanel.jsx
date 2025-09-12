@@ -357,7 +357,7 @@ const SettingsPanel = ({
 
         {/* ChatGPT-style Footer */}
         <div className="settings-footer">
-          <div className="settings-version">ChatGPT Clone v1.0.0</div>
+          <div className="settings-version">QuantumChat v1.0.0</div>
           <div className="settings-links">
             <a href="#terms">Terms of use</a>
             <a href="#privacy">Privacy policy</a>

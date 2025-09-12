@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Send, Sun, Moon } from 'lucide-react';
 import gptIcon from '../assets/gpt-clone-icon.png';
 import MarkdownMessage from './MarkdownMessage';
+import ThemeToggleButton from './ThemeToggleButton';
 
 export default function ChatArea({ 
   darkMode, 
@@ -13,8 +14,13 @@ export default function ChatArea({
   setMessage,
   onSendMessage,
   currentUser,
-  isLoading = false
+  isLoading = false,
+  forceUpdate = 0
 }) {
+  // Use the forceUpdate prop to force re-render on theme change
+  React.useEffect(() => {
+    console.log('ChatArea re-rendered due to forceUpdate:', forceUpdate);
+  }, [forceUpdate]);
   return (
     <div 
       className="flex-grow-1 d-flex flex-column"
@@ -25,29 +31,27 @@ export default function ChatArea({
       }}
     >
       {/* Header */}
-      <div className={`d-flex justify-content-between align-items-center p-3 shadow border-bottom ${
-        darkMode ? 'bg-dark border-dark' : 'bg-white'
-      }`}>
+      <div className="d-flex justify-content-between align-items-center p-3 shadow border-bottom"
+           style={{
+             backgroundColor: darkMode ? '#1a1a1a' : '#ffffff',
+             borderBottomColor: darkMode ? '#404040' : '#e8e7f3',
+             color: darkMode ? '#ffffff' : '#2d2d2d'
+           }}>
         <div className="d-flex align-items-center gap-2">
           {sidebarCollapsed && (
             <>
-              <img src={gptIcon} alt="ChatClone Logo" style={{width: '24px', height: '24px'}} />
-              <h2 className="h5 fw-bold mb-0 gradient-text">ChatClone</h2>
+              <img src={gptIcon} alt="QuantumChat Logo" style={{width: '24px', height: '24px'}} />
+              <h2 className="h5 fw-bold mb-0 gradient-text">QuantumChat</h2>
             </>
           )}
         </div>
-        <button
-          onClick={toggleDarkMode}
-          className={`btn rounded-3 ${
-            darkMode ? 'btn-outline-light' : 'btn-outline-secondary'
-          }`}
-        >
-          {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
+        <ThemeToggleButton isDarkMode={darkMode} onToggle={toggleDarkMode} />
       </div>
 
       {/* Messages */}
-      <div className="flex-grow-1 overflow-auto p-4" style={{backgroundColor: 'transparent'}}>
+      <div className="flex-grow-1 overflow-auto p-4" style={{
+        backgroundColor: darkMode ? '#1a1a1a' : '#f8f7fc'
+      }}>
         {messages.map((msg, i) => (
           <motion.div
             key={i}
@@ -56,18 +60,26 @@ export default function ChatArea({
             transition={{ duration: 0.3 }}
             className={`p-3 rounded-4 shadow-sm mb-3 ${
               msg.role === "user"
-                ? "ms-auto text-white"
+                ? ""
                 : msg.isError
                 ? "bg-danger bg-opacity-10 border border-danger"
-                : darkMode ? "bg-dark text-white border border-secondary" : "bg-light"
+                : ""
             }`}
             style={{
               maxWidth: '80%',
               background: msg.role === "user" 
-                ? 'linear-gradient(to right, #3b82f6, #8b5cf6)' 
+                ? (darkMode ? '#312e81' : '#f0efff')
                 : msg.isError
                 ? undefined
-                : undefined
+                : (darkMode ? '#242424' : '#ffffff'),
+              color: msg.role === "user" 
+                ? (darkMode ? '#ffffff' : '#4F46E5') 
+                : (darkMode ? '#ffffff' : '#2d2d2d'),
+              border: msg.role === "user" 
+                ? (darkMode ? '1px solid #4F46E5' : '1px solid #B7B1F2')
+                : (darkMode ? '1px solid #404040' : '1px solid #e8e7f3'),
+              marginLeft: msg.role === "user" ? 'auto' : undefined,
+              fontWeight: msg.role === "user" ? '500' : undefined
             }}
           >
             <div className="fw-medium">
@@ -110,10 +122,13 @@ export default function ChatArea({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`p-3 rounded-4 shadow-sm mb-3 ${
-              darkMode ? "bg-dark text-white border border-secondary" : "bg-light"
-            }`}
-            style={{ maxWidth: '80%' }}
+            className="p-3 rounded-4 shadow-sm mb-3"
+            style={{ 
+              maxWidth: '80%',
+              backgroundColor: darkMode ? '#242424' : '#ffffff',
+              border: darkMode ? '1px solid #404040' : '1px solid #e8e7f3',
+              color: darkMode ? '#ffffff' : '#2d2d2d'
+            }}
           >
             <div className="d-flex align-items-center">
               <div className="typing-indicator">
@@ -121,14 +136,17 @@ export default function ChatArea({
                 <span></span>
                 <span></span>
               </div>
-              <span className="ms-2 small text-muted">Gemini is thinking...</span>
+              <span className="ms-2 small" style={{color: darkMode ? '#cccccc' : '#666666'}}>Gemini is thinking...</span>
             </div>
           </motion.div>
         )}
       </div>
 
       {/* Input */}
-      <div className={`p-3 border-top ${darkMode ? 'bg-dark border-dark' : 'bg-white'}`}>
+      <div className="p-3 border-top" style={{
+        backgroundColor: darkMode ? '#1a1a1a' : '#ffffff',
+        borderTopColor: darkMode ? '#404040' : '#e8e7f3'
+      }}>
         <div className="d-flex gap-2">
           <input
             value={message}
@@ -141,9 +159,12 @@ export default function ChatArea({
             }}
             placeholder="Type your message..."
             disabled={isLoading}
-            className={`form-control rounded-3 ${
-              darkMode ? 'bg-dark text-white border-secondary' : ''
-            }`}
+            className="form-control rounded-3"
+            style={{
+              backgroundColor: darkMode ? '#242424' : '#ffffff',
+              border: darkMode ? '1px solid #404040' : '1px solid #e8e7f3',
+              color: darkMode ? '#ffffff' : '#2d2d2d'
+            }}
           />
           <button
             onClick={() => {
@@ -153,12 +174,18 @@ export default function ChatArea({
               }
             }}
             disabled={!message.trim() || isLoading}
-            className="btn text-white rounded-3"
+            className="btn rounded-3"
             style={{
               background: (!message.trim() || isLoading) 
-                ? '#6c757d' 
-                : 'linear-gradient(to right, #3b82f6, #8b5cf6)', 
-              border: 'none'
+                ? (darkMode ? '#404040' : '#f5f5f5')
+                : (darkMode ? '#4F46E5' : '#B7B1F2'), 
+              border: 'none',
+              color: (!message.trim() || isLoading) 
+                ? (darkMode ? '#666666' : '#999999')
+                : 'white',
+              padding: '12px',
+              boxShadow: (!message.trim() || isLoading) ? 'none' : (darkMode ? '0 2px 4px rgba(0, 0, 0, 0.3)' : '0 2px 4px rgba(183, 177, 242, 0.08)'),
+              transition: 'all 0.2s ease'
             }}
           >
             {isLoading ? (
@@ -171,53 +198,6 @@ export default function ChatArea({
           </button>
         </div>
       </div>
-      
-      {/* CSS for animations */}
-      <style jsx>{`
-        .typing-indicator {
-          display: inline-flex;
-          align-items: center;
-          gap: 3px;
-        }
-        
-        .typing-indicator span {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background-color: #6c757d;
-          animation: typing 1.4s infinite ease-in-out;
-        }
-        
-        .typing-indicator span:nth-child(1) {
-          animation-delay: -0.32s;
-        }
-        
-        .typing-indicator span:nth-child(2) {
-          animation-delay: -0.16s;
-        }
-        
-        .typing-cursor {
-          animation: blink 1s infinite;
-          color: #6c757d;
-          margin-left: 2px;
-        }
-        
-        @keyframes typing {
-          0%, 80%, 100% {
-            transform: scale(0);
-            opacity: 0.5;
-          }
-          40% {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-        
-        @keyframes blink {
-          0%, 50% { opacity: 1; }
-          51%, 100% { opacity: 0; }
-        }
-      `}</style>
     </div>
   );
 }

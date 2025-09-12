@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './component/sidebar';
 import ChatArea from './component/ChatArea';
 import AuthForm from './component/AuthForm';
 import SettingsPanel from './component/SettingsPanel/SettingsPanel';
+import useThemeToggle from './utils/useThemeToggle';
 import { 
   generateGeminiResponse, 
   generateGeminiStreamResponse, 
@@ -12,19 +13,21 @@ import {
 } from './services/geminiService';
 
 export default function ChatApp() {
-  const [darkMode, setDarkMode] = useState(false);
+  // Use our custom theme toggle hook with enhanced capabilities
+  const { darkMode, toggleTheme, themePreference, setTheme } = useThemeToggle(false);
+  
   const [loggedIn, setLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [theme, setTheme] = useState("system");
   const [isLoading, setIsLoading] = useState(false);
   const [streamingResponse, setStreamingResponse] = useState('');
+  const [forceUpdate, setForceUpdate] = useState(0); // Add force update state
   
   const [messages, setMessages] = useState([
     { 
       role: "ai", 
-      text: "Hello! I'm powered by Google's Gemini AI. How can I help you today?", 
+      text: "Hello! I'm QuantumChat, powered by Google's Gemini AI. How can I help you today?", 
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     },
   ]);
@@ -50,8 +53,14 @@ export default function ChatApp() {
     setCurrentUser(null);
   };
 
+  // Enhanced dark mode toggle function that now uses our custom hook
   const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
+    toggleTheme();
+    
+    // Force component re-render
+    setTimeout(() => {
+      setForceUpdate(prev => prev + 1);
+    }, 0);
   };
 
   const toggleSidebar = () => {
@@ -68,12 +77,11 @@ export default function ChatApp() {
 
   const handleSettingsChange = (newSettings) => {
     // Handle settings changes
-    if (newSettings.appearance?.theme !== theme) {
+    if (newSettings.appearance?.theme !== themePreference) {
       setTheme(newSettings.appearance.theme);
     }
     
     // You can add more settings handling here
-    console.log('Settings updated:', newSettings);
   };
 
   const handleSend = async () => {
@@ -162,14 +170,13 @@ export default function ChatApp() {
           try {
             const title = await generateConversationTitle([...messages, { role: "ai", text: fullResponse }]);
             // You could save this title to localStorage or a database here
-            console.log('Generated conversation title:', title);
           } catch (error) {
-            console.warn('Failed to generate conversation title:', error);
+            // Failed to generate conversation title
           }
         }
         
       } catch (error) {
-        console.error('Error getting AI response:', error);
+        // Handle AI response error
         
         // Add error message
         const errorMessage = {
@@ -200,7 +207,7 @@ export default function ChatApp() {
     setMessages([
       { 
         role: "ai", 
-        text: "Hello! I'm powered by Google's Gemini AI. How can I help you today?", 
+        text: "Hello! I'm QuantumChat, powered by Google's Gemini AI. How can I help you today?", 
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       },
     ]);
@@ -216,23 +223,6 @@ export default function ChatApp() {
     ]);
   };
 
-  // Apply dark mode and theme to body
-  React.useEffect(() => {
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    let shouldBeDark = darkMode;
-    
-    if (theme === "system") {
-      shouldBeDark = systemPrefersDark;
-    } else if (theme === "dark") {
-      shouldBeDark = true;
-    } else if (theme === "light") {
-      shouldBeDark = false;
-    }
-    
-    setDarkMode(shouldBeDark);
-    document.body.className = shouldBeDark ? 'bg-dark text-white' : 'bg-light text-dark';
-  }, [theme]);
-
   if (!loggedIn) {
     return (
       <AuthForm 
@@ -244,7 +234,12 @@ export default function ChatApp() {
   }
 
   return (
-    <div className={`d-flex ${darkMode ? 'bg-dark text-white' : 'bg-light text-dark'}`} style={{height: '100vh', overflow: 'hidden'}}>
+    <div className={`d-flex ${darkMode ? 'dark' : 'light'}`} style={{
+      height: '100vh', 
+      overflow: 'hidden',
+      background: darkMode ? '#1a1a1a' : '#f8f7fc',
+      color: darkMode ? '#ffffff' : '#2d2d2d'
+    }}>
       <Sidebar
         darkMode={darkMode}
         chats={chats}
@@ -268,6 +263,7 @@ export default function ChatApp() {
         onSendMessage={handleSend}
         currentUser={currentUser}
         isLoading={isLoading}
+        forceUpdate={forceUpdate}
       />
 
       {/* Settings Panel */}
@@ -275,7 +271,7 @@ export default function ChatApp() {
         isOpen={showSettings}
         onClose={handleCloseSettings}
         darkMode={darkMode}
-        theme={theme}
+        theme={themePreference}
         setTheme={setTheme}
         currentUser={currentUser}
         onSettingsChange={handleSettingsChange}

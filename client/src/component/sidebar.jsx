@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LogOut, MessageSquare, Plus, X, Menu, Search, Book, Zap, Grid3X3, Folder, User, ArrowUp, Settings, HelpCircle } from 'lucide-react';
 import gptIcon from '../assets/gpt-clone-icon.png';
+import SearchModal from './SearchModal';
 
 export default function Sidebar({ 
   darkMode, 
@@ -17,45 +18,62 @@ export default function Sidebar({
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   
+  // Force sidebar to use correct colors based on theme
+  React.useEffect(() => {
+    const sidebarEl = document.querySelector('.d-flex.flex-column.shadow');
+    if (sidebarEl) {
+      sidebarEl.style.backgroundColor = darkMode ? '#4a5568' : '#B7B1F2';
+    }
+  }, [darkMode]);
+  
   const shouldShowFull = !isCollapsed;
   const sidebarWidth = shouldShowFull ? '280px' : '60px';
 
   return (
     <>
       <div
-        className={`d-flex flex-column shadow ${
-          darkMode ? 'bg-dark text-white' : 'bg-light'
-        }`}
+        className={`d-flex flex-column shadow ${darkMode ? 'dark' : 'light'}`}
         style={{
           width: sidebarWidth,
-          borderRight: `1px solid ${darkMode ? '#333' : 'var(--bs-border-color)'}`,
+          background: darkMode ? '#4a5568' : '#B7B1F2', // Direct color values as backup
+          color: 'white',
+          borderRight: 'none',
           height: '100vh',
           position: 'fixed',
           top: 0,
           left: 0,
           zIndex: 1000,
-          transition: 'width 0.3s ease-in-out',
+          transition: 'width 0.3s ease-in-out, background-color 0.3s ease-in-out',
           overflow: 'hidden'
         }}
+        data-theme={darkMode ? 'dark' : 'light'}
       >
       {/* Header with Toggle Button */}
-      <div className={`d-flex align-items-center justify-content-between p-3 ${
-        darkMode ? 'border-bottom border-dark' : 'border-bottom'
-      }`} style={{minHeight: '60px'}}>
+      <div className="d-flex align-items-center justify-content-between p-3" 
+           style={{
+             minHeight: '60px',
+             borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+           }}>
         {shouldShowFull ? (
           <>
             <div className="d-flex align-items-center gap-2">
-              <img src={gptIcon} alt="ChatClone Logo" style={{width: '24px', height: '24px'}} />
-              <h2 className="h5 fw-bold mb-0 gradient-text" style={{whiteSpace: 'nowrap'}}>ChatClone</h2>
+              <img src={gptIcon} alt="QuantumChat Logo" style={{width: '24px', height: '24px'}} />
+              <h2 className="h5 fw-bold mb-0" style={{whiteSpace: 'nowrap', color: 'white'}}>QuantumChat</h2>
             </div>
             <button
               onClick={onToggle}
-              className={`btn btn-sm rounded-3 ${
-                darkMode ? 'text-white' : 'btn-outline-secondary'
-              }`}
+              className="btn btn-sm rounded-3"
               style={{
-                background: 'none',
-                border: 'none'
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'var(--sidebar-hover)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
               }}
             >
               <X size={16} />
@@ -80,34 +98,44 @@ export default function Sidebar({
 
       {/* Navigation Menu */}
       {shouldShowFull ? (
-        <div className={`p-3 ${darkMode ? 'border-bottom border-dark' : 'border-bottom'}`}>
+        <div className="p-3" style={{borderBottom: '1px solid rgba(255, 255, 255, 0.1)'}}>
           {/* New Chat Button */}
           <button
             onClick={onNewChat}
-            className="btn text-white w-100 mb-3 rounded-3 d-flex align-items-center justify-content-center gap-2"
+            className="btn w-100 mb-2 rounded-2 d-flex align-items-center justify-content-center gap-2"
             style={{
-              background: 'linear-gradient(to right, #3b82f6, #8b5cf6)', 
-              border: 'none'
+              backgroundColor: 'rgba(255, 255, 255, 0.15)', 
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              fontWeight: '500',
+              fontSize: '13px',
+              padding: '6px 10px',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.25)';
+              e.target.style.borderColor = 'rgba(255, 255, 255, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+              e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
             }}
           >
-            <Plus size={16} /> New Chat
+            <Plus size={14} /> New Chat
           </button>
 
           {/* Search Toggle */}
           <button
             onClick={() => setShowSearchModal(true)}
-            className={`btn w-100 mb-2 rounded-3 d-flex align-items-center gap-2 ${
-              darkMode 
-                ? 'text-white hover-bg-secondary' 
-                : 'text-dark hover-bg-light'
-            }`}
+            className="btn w-100 mb-2 rounded-3 d-flex align-items-center gap-2"
             style={{
               background: 'none',
               border: 'none',
+              color: 'white',
               transition: 'background-color 0.2s'
             }}
             onMouseEnter={(e) => {
-              e.target.style.backgroundColor = darkMode ? '#333' : '#f8f9fa';
+              e.target.style.backgroundColor = 'var(--sidebar-hover)';
             }}
             onMouseLeave={(e) => {
               e.target.style.backgroundColor = 'transparent';
@@ -190,14 +218,16 @@ export default function Sidebar({
           {/* New Chat */}
           <button
             onClick={onNewChat}
-            className="btn text-white w-100 mb-3 rounded-3 d-flex justify-content-center"
+            className={`btn w-100 mb-3 rounded-3 d-flex justify-content-center align-items-center ${darkMode ? 'text-white' : 'text-dark'}`}
             style={{
-              background: 'linear-gradient(to right, #3b82f6, #8b5cf6)', 
-              border: 'none'
+              background: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'linear-gradient(135deg, #f4f2ff 0%, #fef4fc 100%)', 
+              border: darkMode ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid #e8e5ff',
+              padding: '7px',
+              height: '36px'
             }}
             title="New Chat"
           >
-            <Plus size={16} />
+            <Plus size={17} strokeWidth={2.5} />
           </button>
           
           {/* Search */}
@@ -371,6 +401,15 @@ export default function Sidebar({
         )}
       </div>
       </div>
+
+      {/* Search Modal */}
+      <SearchModal 
+        show={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        chats={chats}
+        onSelectChat={onSelectChat}
+        darkMode={darkMode}
+      />
     </>
   );
 }
