@@ -1,203 +1,479 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Send, Sun, Moon } from 'lucide-react';
-import gptIcon from '../assets/gpt-clone-icon.png';
-import MarkdownMessage from './MarkdownMessage';
-import ThemeToggleButton from './ThemeToggleButton';
+import React from "react";
+import { Send, Sun, Moon, Volume2, Copy, Share2, Plus, Mic, FileText, X } from "lucide-react";
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import quantumIcon from "../assets/quantum-chat-icon.png";
+import MarkdownMessage from "./MarkdownMessage";
+import { generateGeminiResponse } from "../services/geminiService";
 
-export default function ChatArea({ 
-  darkMode, 
+export default function ChatArea({
+  darkMode,
   toggleDarkMode,
   sidebarCollapsed,
-  messages, 
+  messages,
   message,
   setMessage,
   onSendMessage,
   currentUser,
   isLoading = false,
-  forceUpdate = 0
+  forceUpdate = 0,
+  onToggleSidebar,
 }) {
-  // Use the forceUpdate prop to force re-render on theme change
   React.useEffect(() => {
-    console.log('ChatArea re-rendered due to forceUpdate:', forceUpdate);
+    console.log("ChatArea re-rendered due to forceUpdate:", forceUpdate);
   }, [forceUpdate]);
+
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+  const [showToast, setShowToast] = React.useState(false);
+  const [toastMessage, setToastMessage] = React.useState("");
+
+  const messagesEndRef = React.useRef(null);
+  const fileInputRef = React.useRef(null);
+  const recognitionRef = React.useRef(null);
+  const shareBtnRef = React.useRef(null);
+  const sharePopoverRef = React.useRef(null);
+
+  // Auto scroll to bottom on new messages
+  React.useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isLoading]);
+
+  // Window resize
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Notification
+  const showNotification = (msg) => {
+    setToastMessage(msg);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2000);
+  };
+
+  // Share page (header button) - uses native share when available, falls back to copy
+  const handleShare = async () => {
+    const shareData = {
+      title: document.title || "QuantumChat",
+      text: "Check out my QuantumChat session",
+      url: window.location.href,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        showNotification("🔗 Shared");
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(window.location.href);
+        showNotification("🔗 Link copied to clipboard");
+      } else {
+        showNotification("🔗 Share not supported");
+      }
+    } catch (err) {
+      console.error("Share failed", err);
+      showNotification("🔗 Share failed");
+    }
+  };
+
+  // Share modal state
+  const [showShareModal, setShowShareModal] = React.useState(false);
+
+  // Close popover when clicking outside
+  React.useEffect(() => {
+    if (!showShareModal) return;
+    const onDocClick = (e) => {
+      const pop = sharePopoverRef.current;
+      const btn = shareBtnRef.current;
+      if (pop && !pop.contains(e.target) && btn && !btn.contains(e.target)) {
+        setShowShareModal(false);
+      }
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, [showShareModal]);
+
+  // Export messages as a downloadable PDF using jsPDF + autotable. Falls back to a printable window.
+  const handleExportPdf = () => {
+    try {
+      if (!messages || messages.length === 0) return showNotification('Nothing to export');
+
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const marginX = 40;
+      const startY = 48;
+      doc.setFontSize(14);
+      doc.text('QuantumChat Export', marginX, 36);
+      doc.setFontSize(10);
+
+      // Build rows: [Role, Message]
+      const rows = messages.map((m) => {
+        const role = m.role || '';
+        // Prefer text property; fallback to stringified content
+        let text = '';
+        if (typeof m.text === 'string') text = m.text.replace(/\s+/g, ' ').trim();
+        else if (m.content) text = String(m.content).slice(0, 2000);
+        return [role, text];
+      });
+
+      // Use autoTable to layout messages across pages
+      // Column widths: role narrow, message fills rest
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const roleColWidth = 70;
+      const msgColWidth = pageWidth - marginX * 2 - roleColWidth;
+
+      autoTable(doc, {
+        startY,
+        head: [['Role', 'Message']],
+        body: rows,
+        styles: { fontSize: 10, cellPadding: 6 },
+        headStyles: { fillColor: [74, 111, 165], textColor: 255 },
+        columnStyles: {
+          0: { cellWidth: roleColWidth },
+          1: { cellWidth: msgColWidth }
+        },
+        theme: 'striped',
+        didDrawPage: (data) => {
+          // optional: could add header/footer here
+        }
+      });
+
+      const fileName = `quantumchat_export_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'_')}.pdf`;
+      doc.save(fileName);
+      showNotification('PDF downloaded');
+    } catch (err) {
+      console.error('Auto PDF failed, falling back to printable window', err);
+      // Fallback: printable window
+      try {
+        const printable = document.querySelector('.chat-messages-container');
+        if (!printable) return showNotification('Nothing to export');
+        const html = `
+          <html>
+            <head>
+              <title>QuantumChat export</title>
+              <meta charset="utf-8" />
+              <style>
+                body { font-family: Inter, system-ui, -apple-system, Arial, sans-serif; color: #111; padding: 24px; }
+                .msg { margin-bottom: 12px; padding: 12px; border-radius: 10px; background: #fff; border: 1px solid #e6e9f2; }
+              </style>
+            </head>
+            <body>
+              ${printable.innerHTML}
+            </body>
+          </html>
+        `;
+        const newWin = window.open('', '_blank');
+        if (!newWin) return showNotification('Popup blocked. Cannot export.');
+        newWin.document.write(html);
+        newWin.document.close();
+        newWin.focus();
+        newWin.print();
+        showNotification('Preparing export...');
+      } catch (err2) {
+        console.error('Fallback export failed', err2);
+        showNotification('Export failed');
+      }
+    }
+  };
+
+  // Text-to-speech
+  const speakText = (text) => {
+    if (!text || typeof text !== "string") return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+    showNotification("🔊 Reading message aloud");
+  };
+
+  // Copy message
+  const copyMessage = async (text) => {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      showNotification("📋 Message copied to clipboard");
+    } catch {
+      showNotification("📋 Copy failed");
+    }
+  };
+
+  // Send message
+  const handleSendMessage = async () => {
+    // Forward message to parent handler which owns the send flow.
+    if (!message || !message.trim() || isLoading) return;
+    try {
+      onSendMessage(message);
+    } catch (err) {
+      console.error('Send handler error', err);
+      showNotification('⚠️ Could not send message');
+    }
+  };
+
+  // File upload
+  const handleAttachClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+  const handleFileChange = (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    setMessage((prev) => (prev ? prev + " " : "") + `[file: ${f.name}] `);
+    showNotification(`Attached file: ${f.name}`);
+    e.target.value = null;
+  };
+
+  // Speech recognition
+  const [isRecording, setIsRecording] = React.useState(false);
+  const startSpeechRecognition = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showNotification("Speech recognition not supported.");
+      return;
+    }
+    try {
+      const recog = new SpeechRecognition();
+      recog.lang = "en-US";
+      recog.interimResults = true;
+      recog.continuous = false;
+      recog.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map((r) => r[0].transcript)
+          .join("");
+        setMessage((prev) => (prev ? prev + " " : "") + transcript);
+      };
+      recog.onend = () => setIsRecording(false);
+      recog.onerror = () => {
+        showNotification("Speech recognition error");
+        setIsRecording(false);
+      };
+      recognitionRef.current = recog;
+      recog.start();
+      setIsRecording(true);
+      showNotification("🎤 Listening...");
+    } catch (e) {
+      console.error(e);
+      showNotification("Could not start speech recognition.");
+    }
+  };
+  const stopSpeechRecognition = () => {
+    if (recognitionRef.current) recognitionRef.current.stop();
+    setIsRecording(false);
+  };
+
   return (
-    <div 
-      className="flex-grow-1 d-flex flex-column"
-      style={{
-        marginLeft: sidebarCollapsed ? '60px' : '280px',
-        transition: 'margin-left 0.3s ease-in-out',
-        width: '100%'
-      }}
-    >
+    <div className={`chat-area ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center p-3 shadow border-bottom"
-           style={{
-             backgroundColor: darkMode ? '#1a1a1a' : '#ffffff',
-             borderBottomColor: darkMode ? '#404040' : '#e8e7f3',
-             color: darkMode ? '#ffffff' : '#2d2d2d'
-           }}>
+      <div className="chat-header">
         <div className="d-flex align-items-center gap-2">
-          {sidebarCollapsed && (
+          {isMobile && (
+            <button
+              className="btn ghost me-2"
+              onClick={onToggleSidebar}
+              aria-label="Toggle Sidebar"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                fill="none"
+              >
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          )}
+          {(sidebarCollapsed || isMobile) && (
             <>
-              <img src={gptIcon} alt="QuantumChat Logo" style={{width: '24px', height: '24px'}} />
-              <h2 className="h5 fw-bold mb-0 gradient-text">QuantumChat</h2>
+              <img
+                src={quantumIcon}
+                alt="QuantumChat Logo"
+                style={{ width: "32px", height: "32px" }}
+              />
+              <h2 className="h5 fw-bold mb-0">QuantumChat</h2>
             </>
           )}
         </div>
-        <ThemeToggleButton isDarkMode={darkMode} onToggle={toggleDarkMode} />
+        <div className="d-flex align-items-center gap-2" style={{ position: 'relative' }}>
+          {/* header icon that opens the share popover */}
+          <button
+            ref={shareBtnRef}
+            className="btn ghost"
+            onClick={() => setShowShareModal((s) => !s)}
+            aria-label="Open export menu"
+            title="Export & Share"
+            aria-haspopup="menu"
+            aria-expanded={showShareModal}
+          >
+            {/* Custom export icon (inline SVG) — uses currentColor so it follows theme */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="3" y="7" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none" />
+              <path d="M8 11l4-4 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              <path d="M12 7v8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            </svg>
+          </button>
+          {showShareModal && (
+            <div ref={sharePopoverRef} className="share-popover" role="menu" aria-label="Share menu">
+              <button className="share-popover-close" onClick={() => setShowShareModal(false)} aria-label="Close share menu">
+                <X size={16} />
+              </button>
+              <button className="share-popover-item" onClick={async () => { await handleShare(); setShowShareModal(false);} }>
+                <Share2 size={16} style={{ marginRight: 8 }} /> Share
+              </button>
+              <button className="share-popover-item" onClick={() => { handleExportPdf(); setShowShareModal(false); }}>
+                <FileText size={16} style={{ marginRight: 8 }} /> Export as PDF
+              </button>
+            </div>
+          )}
+          <button
+            className="btn ghost"
+            onClick={toggleDarkMode}
+            aria-label={
+              darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"
+            }
+          >
+            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-grow-1 overflow-auto p-4" style={{
-        backgroundColor: darkMode ? '#1a1a1a' : '#f8f7fc'
-      }}>
-        {messages.map((msg, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className={`p-3 rounded-4 shadow-sm mb-3 ${
-              msg.role === "user"
-                ? ""
-                : msg.isError
-                ? "bg-danger bg-opacity-10 border border-danger"
-                : ""
-            }`}
-            style={{
-              maxWidth: '80%',
-              background: msg.role === "user" 
-                ? (darkMode ? '#312e81' : '#f0efff')
-                : msg.isError
-                ? undefined
-                : (darkMode ? '#242424' : '#ffffff'),
-              color: msg.role === "user" 
-                ? (darkMode ? '#ffffff' : '#4F46E5') 
-                : (darkMode ? '#ffffff' : '#2d2d2d'),
-              border: msg.role === "user" 
-                ? (darkMode ? '1px solid #4F46E5' : '1px solid #B7B1F2')
-                : (darkMode ? '1px solid #404040' : '1px solid #e8e7f3'),
-              marginLeft: msg.role === "user" ? 'auto' : undefined,
-              fontWeight: msg.role === "user" ? '500' : undefined
-            }}
-          >
-            <div className="fw-medium">
-              {msg.role === 'user' ? (
-                <>
-                  {msg.text}
-                  {msg.isStreaming && (
-                    <span className="typing-cursor">|</span>
+      <div className="chat-content">
+        {messages.length === 0 ? (
+          <div className="empty-chat-state">
+            <h3>QuantumChat</h3>
+            <p>How can I help you today?</p>
+          </div>
+        ) : (
+          <>
+            {messages.map((msg, i) => (
+              <div
+                key={i}
+                className={`msg-container ${
+                  msg.role === "user" ? "user-container" : "bot-container"
+                }`}
+              >
+                <div
+                  className={`msg ${msg.role === "user" ? "user" : "bot"}`}
+                >
+                  {msg.role === "user" ? (
+                    msg.text
+                  ) : (
+                    // If this AI message is streaming, show a typing indicator instead of partial text
+                    msg.isStreaming ? (
+                      <div className="typing-placeholder" aria-live="polite">
+                        <div className="typing-indicator" aria-hidden>
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                        </div>
+                        <span className="typing-cursor"> typing...</span>
+                      </div>
+                    ) : (
+                      <MarkdownMessage darkMode={darkMode}>
+                        {msg.text}
+                      </MarkdownMessage>
+                    )
                   )}
-                </>
-              ) : (
-                <>
-                  <MarkdownMessage darkMode={darkMode}>
-                    {typeof msg.text === 'string' ? msg.text : String(msg.text)}
-                  </MarkdownMessage>
-                  {msg.isStreaming && (
-                    <span className="typing-cursor">|</span>
+                  {msg.role === "ai" && msg.text && !msg.isStreaming && (
+                    <div className="msg-actions">
+                      <button onClick={() => speakText(msg.text)} className="msg-action-btn" title="Read aloud">
+                        <Volume2 size={14} />
+                      </button>
+                      <button onClick={() => copyMessage(msg.text)} className="msg-action-btn" title="Copy message">
+                        <Copy size={14} />
+                      </button>
+                      <button onClick={() => showNotification("Shared!")} className="msg-action-btn" title="Share message">
+                        <Share2 size={14} />
+                      </button>
+                    </div>
                   )}
-                </>
-              )}
-            </div>
-            <div className={`small mt-1 ${
-              msg.role === "user" 
-                ? "text-white-50" 
-                : msg.isError
-                ? "text-danger"
-                : darkMode 
-                  ? "text-light opacity-75" 
-                  : "text-muted"
-            }`}>
-              {msg.time}
-              {msg.isError && " • Error"}
-              {msg.isStreaming && " • Typing..."}
-            </div>
-          </motion.div>
-        ))}
-        
-        {/* Typing Indicator */}
-        {isLoading && messages.length > 0 && !messages[messages.length - 1].isStreaming && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-3 rounded-4 shadow-sm mb-3"
-            style={{ 
-              maxWidth: '80%',
-              backgroundColor: darkMode ? '#242424' : '#ffffff',
-              border: darkMode ? '1px solid #404040' : '1px solid #e8e7f3',
-              color: darkMode ? '#ffffff' : '#2d2d2d'
-            }}
-          >
-            <div className="d-flex align-items-center">
-              <div className="typing-indicator">
-                <span></span>
-                <span></span>
-                <span></span>
+                </div>
               </div>
-              <span className="ms-2 small" style={{color: darkMode ? '#cccccc' : '#666666'}}>Gemini is thinking...</span>
-            </div>
-          </motion.div>
+            ))}
+            <div ref={messagesEndRef} />
+          </>
         )}
       </div>
 
       {/* Input */}
-      <div className="p-3 border-top" style={{
-        backgroundColor: darkMode ? '#1a1a1a' : '#ffffff',
-        borderTopColor: darkMode ? '#404040' : '#e8e7f3'
-      }}>
-        <div className="d-flex gap-2">
-          <input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && !isLoading && message.trim()) {
-                onSendMessage(message);
-                setMessage('');
-              }
-            }}
-            placeholder="Type your message..."
-            disabled={isLoading}
-            className="form-control rounded-3"
-            style={{
-              backgroundColor: darkMode ? '#242424' : '#ffffff',
-              border: darkMode ? '1px solid #404040' : '1px solid #e8e7f3',
-              color: darkMode ? '#ffffff' : '#2d2d2d'
-            }}
-          />
-          <button
-            onClick={() => {
-              if (!isLoading && message.trim()) {
-                onSendMessage(message);
-                setMessage('');
-              }
-            }}
-            disabled={!message.trim() || isLoading}
-            className="btn rounded-3"
-            style={{
-              background: (!message.trim() || isLoading) 
-                ? (darkMode ? '#404040' : '#f5f5f5')
-                : (darkMode ? '#4F46E5' : '#B7B1F2'), 
-              border: 'none',
-              color: (!message.trim() || isLoading) 
-                ? (darkMode ? '#666666' : '#999999')
-                : 'white',
-              padding: '12px',
-              boxShadow: (!message.trim() || isLoading) ? 'none' : (darkMode ? '0 2px 4px rgba(0, 0, 0, 0.3)' : '0 2px 4px rgba(183, 177, 242, 0.08)'),
-              transition: 'all 0.2s ease'
-            }}
-          >
-            {isLoading ? (
-              <div className="spinner-border spinner-border-sm" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            ) : (
-              <Send size={16} />
-            )}
-          </button>
+      <div className="chat-input-container">
+        <div className="chat-input-wrapper">
+          <div className="chat-input-pill">
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+              aria-hidden
+            />
+
+            {/* Attach button */}
+            <button
+              className="pill-action attach-btn"
+              onClick={handleAttachClick}
+              title="Attach file"
+              aria-label="Attach file"
+            >
+              <Plus size={18} />
+            </button>
+
+            {/* Text input */}
+            <input
+              className="pill-input"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !isLoading && message.trim()) {
+                  handleSendMessage();
+                }
+              }}
+              placeholder="Message QuantumChat..."
+              disabled={isLoading}
+              aria-label="Message input"
+            />
+
+            {/* Right-side actions */}
+            <div className="pill-actions-right">
+              {/* Mic */}
+              <button
+                className={`pill-action mic-btn ${isRecording ? "recording" : ""}`}
+                onClick={() =>
+                  isRecording ? stopSpeechRecognition() : startSpeechRecognition()
+                }
+                aria-label="Voice input"
+                title="Voice input"
+              >
+                <Mic size={18} />
+              </button>
+
+              {/* Send */}
+              <button
+                onClick={handleSendMessage}
+                disabled={!message.trim() || isLoading}
+                className="pill-action send-btn"
+                aria-label="Send message"
+              >
+                {isLoading ? "..." : <Send size={18} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Safety note */}
+          <div className="pill-note" aria-hidden>
+            <small className="text-muted">
+              QuantumChat can make mistakes. Consider checking important information.
+            </small>
+          </div>
         </div>
       </div>
+
+      {showToast && <div className="toast-notification">{toastMessage}</div>}
+      {/* (Popover-only) share UI — modal removed to keep compact dropdown only */}
     </div>
   );
 }

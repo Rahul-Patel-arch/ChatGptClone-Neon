@@ -1,0 +1,228 @@
+.upgrade-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* slightly lighter overlay with subtle blur so modal content reads well */
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 4000;
+  padding: 20px;
+}
+
+.upgrade-container {
+  width: 980px;
+  max-width: calc(100% - 40px);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 80px);
+  border: 1px solid var(--border);
+}
+
+/* Dark theme: make the modal stand out more from the overlay */
+.dark .upgrade-container {
+  background: #0e1114; /* slightly lighter than overlay */
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 14px 44px rgba(0,0,0,0.6);
+}
+
+/* legacy dark class is handled by global theme variables in theme.css */
+
+.upgrade-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--muted-text);
+}
+
+.upgrade-body {
+  overflow: hidden; /* prevent inner scrolling */
+  padding-top: 12px;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* description under heading - increase contrast so it's visible */
+.upgrade-body > p { color: var(--muted-text); opacity: 0.95; margin-bottom: 12px; }
+
+.no-scroll { overflow: hidden; }
+
+.plans-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.plan-card { height: 100%; border-radius: calc(var(--radius) - 4px); border: 1px solid var(--border); padding: 18px; display:flex; flex-direction:column; justify-content:space-between; /* subtle elevation */ box-shadow: 0 8px 24px rgba(2,6,23,0.06); }
+
+/* Free plan: use surface and text vars so it's visible in both themes */
+.plan-card.free-plan { background: linear-gradient(180deg, var(--surface), var(--muted-surface)); color: var(--text); }
+.plan-card.free-plan .btn { background: transparent; color: var(--accent); border: 1px solid var(--border); }
+/* Improve readability of free plan text in dark mode */
+.plan-card.free-plan ul,
+.plan-card.free-plan p { color: var(--text); opacity: 0.88; }
+/* Dark-mode free card: provide a slightly lighter panel so copy is clear */
+.dark .plan-card.free-plan { background: linear-gradient(180deg, #121418, #0f1214); border: 1px solid rgba(255,255,255,0.03); }
+.dark .plan-card.free-plan ul,
+.dark .plan-card.free-plan p { color: var(--muted-text); opacity: 0.95; }
+
+/* Pro plan: use accent gradient and white (accent-on) text for contrast in both themes */
+/* Pro: subtle blue wash over the surface (less saturated, easier on the eyes) */
+.plan-card.pro-plan {
+  position: relative;
+  overflow: hidden;
+  /* soft blue overlay on top of the surface for a subtle premium look */
+  background: linear-gradient(135deg, rgba(74,111,165,0.10) 0%, rgba(58,90,140,0.06) 100%), var(--surface);
+  color: var(--text);
+  border: 1px solid rgba(74,111,165,0.10);
+  z-index: 0;
+}
+
+/* soft highlight behind the card for a premium lift */
+.plan-card.pro-plan::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  /* much softer halo for subtle emphasis */
+  background: radial-gradient(60% 60% at 15% 25%, rgba(74,111,165,0.12), rgba(83,109,254,0.04) 30%, transparent 50%);
+  filter: blur(14px);
+  opacity: 0.75;
+  transform: translateZ(0);
+  z-index: 0;
+}
+.plan-card.pro-plan > * { position: relative; z-index: 1; }
+.plan-card.pro-plan { box-shadow: 0 10px 24px rgba(17,24,39,0.06); transition: transform 220ms ease, box-shadow 220ms ease; }
+.plan-card.pro-plan:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(17,24,39,0.08); }
+.dark .plan-card.pro-plan { /* darker subtle wash with white text for contrast */
+  background: linear-gradient(135deg, rgba(74,111,165,0.14) 0%, rgba(58,90,140,0.10) 100%), #0f1214;
+  color: var(--accent-on);
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.55);
+}
+.plan-card.pro-plan ul, .plan-card.pro-plan p { color: rgba(255,255,255,0.95); }
+.plan-card.pro-plan .popular-badge { background: rgba(255,186,107,0.95); color: #111; }
+
+.popular-badge { background: #ffb86b; color: #111; padding: 4px 8px; border-radius: 999px; font-size: 12px; }
+
+.upgrade-btn { background: linear-gradient(90deg,var(--accent),var(--accent-hover)); color: var(--accent-on); border: none; padding: 8px 14px; border-radius: 8px; transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease; }
+.upgrade-btn:hover { transform: translateY(-2px); filter: brightness(1.06); box-shadow: 0 8px 28px rgba(83,109,254,0.16); }
+
+/* stronger shadows in dark mode for depth */
+.dark .plan-card { box-shadow: 0 10px 30px rgba(0,0,0,0.45); }
+
+@media (max-width: 880px) {
+  .upgrade-container { width: calc(100% - 24px); }
+  .plans-grid { grid-template-columns: 1fr; }
+}
+
+/* Improve typography & contrast inside cards */
+.plan-card h4 { margin-top: 0; color: var(--text); font-size: 20px; font-weight: 700; }
+.plan-card p { color: var(--muted-text); margin-bottom: 12px; }
+.plan-card ul { list-style: none; padding: 0; margin: 8px 0 12px 0; color: var(--muted-text); }
+.plan-card.free-plan ul, .plan-card.free-plan p { color: var(--muted-text); }
+.plan-card.free-plan h4 { color: var(--text); }
+.plan-card li { margin-bottom: 8px; display:flex; align-items:center; gap:8px; }
+
+/* Ensure Free plan list items are readable in dark mode */
+.plan-card.free-plan ul, .plan-card.free-plan p { color: var(--muted-text); }
+.plan-card.free-plan h4 { color: var(--text); }
+
+/* Ensure Pro plan has strong readable text */
+.plan-card.pro-plan h4 { color: var(--accent-on); }
+.plan-card.pro-plan .price { color: var(--accent-on); font-size: 32px; font-weight: 800; }
+.plan-card.pro-plan h4 { color: var(--accent-on); }
+.plan-card.pro-plan .price { color: var(--accent-on); font-size: 32px; font-weight: 800; }
+.plan-card .btn { min-height: 44px; }
+
+/* Pro plan: slightly smaller primary button to match card scale */
+.plan-card.pro-plan .btn,
+.plan-card.pro-plan .upgrade-btn {
+  padding: 8px 12px; /* slightly less horizontal padding */
+  min-height: 38px; /* a touch smaller than default */
+  font-size: 14px; /* slightly smaller type to fit the card */
+  border-radius: 10px;
+}
+
+/* keep button visually balanced on small screens */
+@media (max-width: 480px) {
+  .plan-card.pro-plan .btn, .plan-card.pro-plan .upgrade-btn { width: 100%; }
+}
+
+/* Enforce sizing when other global rules are stronger - use more specific selectors and !important safely */
+.plans-grid .plan-card.pro-plan .upgrade-btn,
+.plans-grid .plan-card.pro-plan .btn {
+  padding: 8px 12px !important;
+  min-height: 38px !important;
+  font-size: 14px !important;
+}
+
+/* Force a compact, auto-width CTA and add spacing between price and CTA */
+.plans-grid .plan-card.pro-plan > .d-flex.align-items-center.justify-content-between {
+  gap: 18px; /* space between price and CTA */
+}
+
+.plans-grid .plan-card.pro-plan > .d-flex.align-items-center.justify-content-between .upgrade-btn {
+  padding: 6px 12px !important;
+  min-height: 34px !important;
+  font-size: 13px !important;
+  width: auto !important;
+  max-width: 160px !important;
+  align-self: center !important;
+}
+
+/* also ensure the price area can shrink and won't push the button off layout */
+.plans-grid .plan-card.pro-plan > .d-flex.align-items-center.justify-content-between h3 {
+  margin: 0; /* tighten vertical spacing */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 180px); /* leave room for button */
+}
+
+.upgrade-header h2 { color: var(--text); font-size: 28px; }
+.upgrade-overlay .upgrade-container { animation: modalFadeIn 160ms ease; }
+
+/* Ensure high contrast for text inside the modal when the app is in dark mode */
+.dark .upgrade-container h2,
+.dark .upgrade-container h3,
+.dark .upgrade-container h4 {
+  color: var(--text) !important; /* primary light text */
+}
+
+.dark .upgrade-container p,
+.dark .upgrade-container li,
+.dark .upgrade-container .plan-card.free-plan p,
+.dark .upgrade-container .plan-card.free-plan ul {
+  color: var(--muted-text) !important; /* secondary text that's still bright */
+  opacity: 0.98 !important;
+}
+
+.dark .upgrade-container .plan-card.free-plan .btn {
+  color: var(--accent) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* keep pro card whites bright */
+.dark .upgrade-container .plan-card.pro-plan,
+.dark .upgrade-container .plan-card.pro-plan * {
+  color: var(--accent-on) !important;
+}

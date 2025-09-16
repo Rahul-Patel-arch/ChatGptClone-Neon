@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, ChevronDown, ChevronUp } from "lucide-react";
+import { X, ChevronDown, ChevronUp, Archive, RotateCcw, Trash2, Calendar } from "lucide-react";
 import "./SettingsPanel.css";
 
 const SettingsPanel = ({ 
@@ -9,7 +9,10 @@ const SettingsPanel = ({
   theme = "system", 
   setTheme = () => {}, 
   currentUser = { name: "John Doe", email: "john@example.com" },
-  onSettingsChange = () => {}
+  onSettingsChange = () => {},
+  chats = [],
+  onRestoreChat = () => {},
+  onPermanentlyDeleteChat = () => {}
 }) => {
   // Settings state management with ChatGPT-style defaults
   const [settings, setSettings] = useState(() => {
@@ -51,13 +54,14 @@ const SettingsPanel = ({
     return getDefaultSettings();
   });
 
-  // ChatGPT-style expandable sections (collapsed by default like ChatGPT)
+  // ChatGPT-style expandable sections (appearance expanded by default for better UX)
   const [expandedSections, setExpandedSections] = useState({
-    appearance: false,
+    appearance: true,
     customInstructions: false,
     language: false,
     privacy: false,
-    advanced: false
+    advanced: false,
+    archive: false
   });
 
   // Toggle section expansion with smooth animation (ChatGPT behavior)
@@ -121,11 +125,11 @@ const SettingsPanel = ({
   return (
     <div className="settings-overlay" onClick={onClose}>
       <div
-        className={`settings-container ${settings.appearance.theme === 'dark' || (settings.appearance.theme === 'system' && darkMode) ? 'dark' : 'light'}`}
+        className={`settings-container ${darkMode ? 'dark' : ''}`}
         onClick={(e) => e.stopPropagation()}
         data-theme={settings.appearance.theme}
       >
-        {/* ChatGPT-style Header */}
+        {/* Header */}
         <div className="settings-header">
           <h2 className="settings-title">Settings</h2>
           <button className="close-button" onClick={onClose} aria-label="Close settings">
@@ -136,12 +140,12 @@ const SettingsPanel = ({
         {/* Settings Content */}
         <div className="settings-content">
           
-          {/* Appearance Section */}
+          {/* Appearance Section - Expanded by default for better visibility */}
           <div className={`settings-section ${expandedSections.appearance ? 'expanded' : ''}`}>
             <div className="section-header" onClick={() => toggleSection('appearance')}>
               <div className="section-title">
                 <h3>Appearance</h3>
-                <span className="section-description">Customize how ChatGPT looks</span>
+                <span className="section-description">Customize how QuantumChat looks</span>
               </div>
               <div className="section-toggle">
                 {expandedSections.appearance ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -153,23 +157,23 @@ const SettingsPanel = ({
                 <div className="setting-group">
                   <div className="setting-label">
                     <h4>Theme</h4>
-                    <p>Choose how ChatGPT looks to you</p>
+                    <p>Choose how QuantumChat looks to you</p>
                   </div>
                   <div className="theme-buttons">
                     <button
-                      className={`theme-button ${settings.appearance.theme === 'light' ? 'active' : ''}`}
+                      className={`btn ${settings.appearance.theme === 'light' ? 'primary' : 'secondary'}`}
                       onClick={() => handleThemeChange('light')}
                     >
                       Light
                     </button>
                     <button
-                      className={`theme-button ${settings.appearance.theme === 'dark' ? 'active' : ''}`}
+                      className={`btn ${settings.appearance.theme === 'dark' ? 'primary' : 'secondary'}`}
                       onClick={() => handleThemeChange('dark')}
                     >
                       Dark
                     </button>
                     <button
-                      className={`theme-button ${settings.appearance.theme === 'system' ? 'active' : ''}`}
+                      className={`btn ${settings.appearance.theme === 'system' ? 'primary' : 'secondary'}`}
                       onClick={() => handleThemeChange('system')}
                     >
                       System
@@ -185,7 +189,7 @@ const SettingsPanel = ({
             <div className="section-header" onClick={() => toggleSection('customInstructions')}>
               <div className="section-title">
                 <h3>Custom instructions</h3>
-                <span className="section-description">Customize ChatGPT's responses</span>
+                <span className="section-description">Customize QuantumChat's responses</span>
               </div>
               <div className="section-toggle">
                 {expandedSections.customInstructions ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -197,9 +201,9 @@ const SettingsPanel = ({
                 <div className="toggle-setting">
                   <div className="toggle-info">
                     <h4>Enable custom instructions</h4>
-                    <p>ChatGPT will consider your custom instructions for every conversation</p>
+                    <p>QuantumChat will consider your custom instructions for every conversation</p>
                   </div>
-                  <label className="toggle-switch-modern">
+                  <label className="toggle-switch">
                     <input
                       type="checkbox"
                       checked={settings.customInstructions.enabled}
@@ -208,14 +212,14 @@ const SettingsPanel = ({
                         customInstructions: { ...prev.customInstructions, enabled: e.target.checked }
                       }))}
                     />
-                    <span className="toggle-slider-modern"></span>
+                    <span className="toggle-slider"></span>
                   </label>
                 </div>
                 
                 {settings.customInstructions.enabled && (
                   <>
                     <div className="setting-group">
-                      <label className="input-label">What would you like ChatGPT to know about you to provide better responses?</label>
+                      <label className="input-label">What would you like QuantumChat to know about you to provide better responses?</label>
                       <textarea
                         value={settings.customInstructions.aboutYou}
                         onChange={(e) => setSettings(prev => ({
@@ -229,7 +233,7 @@ const SettingsPanel = ({
                     </div>
 
                     <div className="setting-group">
-                      <label className="input-label">How would you like ChatGPT to respond?</label>
+                      <label className="input-label">How would you like QuantumChat to respond?</label>
                       <textarea
                         value={settings.customInstructions.responseStyle}
                         onChange={(e) => setSettings(prev => ({
@@ -266,7 +270,7 @@ const SettingsPanel = ({
                     <h4>Chat history & training</h4>
                     <p>Save new chats on this browser to appear in your history and improve our models</p>
                   </div>
-                  <label className="toggle-switch-modern">
+                  <label className="toggle-switch">
                     <input
                       type="checkbox"
                       checked={settings.privacy.saveHistory}
@@ -275,7 +279,7 @@ const SettingsPanel = ({
                         privacy: { ...prev.privacy, saveHistory: e.target.checked }
                       }))}
                     />
-                    <span className="toggle-slider-modern"></span>
+                    <span className="toggle-slider"></span>
                   </label>
                 </div>
 
@@ -284,7 +288,7 @@ const SettingsPanel = ({
                     <h4>Improve the model for everyone</h4>
                     <p>Allow your conversations to be used to improve our models</p>
                   </div>
-                  <label className="toggle-switch-modern">
+                  <label className="toggle-switch">
                     <input
                       type="checkbox"
                       checked={settings.privacy.analytics}
@@ -293,9 +297,112 @@ const SettingsPanel = ({
                         privacy: { ...prev.privacy, analytics: e.target.checked }
                       }))}
                     />
-                    <span className="toggle-slider-modern"></span>
+                    <span className="toggle-slider"></span>
                   </label>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Archive Section */}
+          <div className={`settings-section ${expandedSections.archive ? 'expanded' : ''}`}>
+            <div className="section-header" onClick={() => toggleSection('archive')}>
+              <div className="section-title">
+                <h3>Archived Chats</h3>
+                <span className="section-description">Manage your archived conversations</span>
+              </div>
+              <div className="section-toggle">
+                {expandedSections.archive ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </div>
+            </div>
+            
+            {expandedSections.archive && (
+              <div className="section-content">
+                <div className="archive-stats">
+                  <div className="stat-item">
+                    <Archive size={16} />
+                    <span>{chats.filter(chat => chat.archived).length} archived chats</span>
+                  </div>
+                </div>
+                
+                <div className="archived-chats-list">
+                  {chats.filter(chat => chat.archived).length === 0 ? (
+                    <div className="empty-archive">
+                      <Archive size={24} className="empty-icon" />
+                      <p>No archived chats</p>
+                      <small>Archived conversations will appear here</small>
+                    </div>
+                  ) : (
+                    chats
+                      .filter(chat => chat.archived)
+                      .sort((a, b) => new Date(b.archivedAt || b.createdAt) - new Date(a.archivedAt || a.createdAt))
+                      .map((chat) => (
+                        <div key={chat.id} className="archived-chat-item">
+                          <div className="chat-info">
+                            <div className="chat-title-archive">{chat.title}</div>
+                            <div className="chat-meta">
+                              <Calendar size={12} />
+                              <span>
+                                Archived {chat.archivedAt 
+                                  ? new Date(chat.archivedAt).toLocaleDateString()
+                                  : 'recently'
+                                }
+                              </span>
+                            </div>
+                          </div>
+                          <div className="chat-actions">
+                            <button
+                              className="btn-icon restore"
+                              onClick={() => onRestoreChat(chat.id)}
+                              title="Restore chat"
+                              aria-label="Restore chat"
+                            >
+                              <RotateCcw size={14} />
+                            </button>
+                            <button
+                              className="btn-icon delete"
+                              onClick={() => {
+                                if (window.confirm('Permanently delete this chat? This action cannot be undone.')) {
+                                  onPermanentlyDeleteChat(chat.id);
+                                }
+                              }}
+                              title="Delete permanently"
+                              aria-label="Delete chat permanently"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                  )}
+                </div>
+                
+                {chats.filter(chat => chat.archived).length > 0 && (
+                  <div className="archive-actions">
+                    <button
+                      className="btn secondary"
+                      onClick={() => {
+                        if (window.confirm('Restore all archived chats? They will appear in your chat list again.')) {
+                          chats.filter(chat => chat.archived).forEach(chat => onRestoreChat(chat.id));
+                        }
+                      }}
+                    >
+                      <RotateCcw size={14} />
+                      Restore All
+                    </button>
+                    <button
+                      className="btn danger"
+                      onClick={() => {
+                        if (window.confirm('Permanently delete all archived chats? This action cannot be undone.')) {
+                          chats.filter(chat => chat.archived).forEach(chat => onPermanentlyDeleteChat(chat.id));
+                        }
+                      }}
+                    >
+                      <Trash2 size={14} />
+                      Delete All
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -319,7 +426,7 @@ const SettingsPanel = ({
                     <h4>Code highlighting</h4>
                     <p>Enable syntax highlighting for code blocks</p>
                   </div>
-                  <label className="toggle-switch-modern">
+                  <label className="toggle-switch">
                     <input
                       type="checkbox"
                       checked={settings.advanced.codeHighlighting}
@@ -328,7 +435,7 @@ const SettingsPanel = ({
                         advanced: { ...prev.advanced, codeHighlighting: e.target.checked }
                       }))}
                     />
-                    <span className="toggle-slider-modern"></span>
+                    <span className="toggle-slider"></span>
                   </label>
                 </div>
 
@@ -337,7 +444,7 @@ const SettingsPanel = ({
                     <h4>Stream responses</h4>
                     <p>Show responses as they're being generated</p>
                   </div>
-                  <label className="toggle-switch-modern">
+                  <label className="toggle-switch">
                     <input
                       type="checkbox"
                       checked={settings.advanced.streamResponses}
@@ -346,7 +453,7 @@ const SettingsPanel = ({
                         advanced: { ...prev.advanced, streamResponses: e.target.checked }
                       }))}
                     />
-                    <span className="toggle-slider-modern"></span>
+                    <span className="toggle-slider"></span>
                   </label>
                 </div>
               </div>
@@ -355,12 +462,13 @@ const SettingsPanel = ({
 
         </div>
 
-        {/* ChatGPT-style Footer */}
+        {/* Footer */}
         <div className="settings-footer">
           <div className="settings-version">QuantumChat v1.0.0</div>
           <div className="settings-links">
-            <a href="#terms">Terms of use</a>
-            <a href="#privacy">Privacy policy</a>
+            <a href="#terms">Terms</a>
+            <a href="#privacy">Privacy</a>
+            <a href="#help">Help</a>
           </div>
         </div>
       </div>

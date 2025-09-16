@@ -1,0 +1,564 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* 
+ * QuantumChat Theme System
+ * A clean, accessible design system with pastel accents
+ */
+
+:root {
+  /* neutrals */
+  --bg: #F5F6FA;                /* page background - very light */
+  --surface: #FFFFFF;           /* card / bubble background */
+  --muted-surface: #F2F3F7;     /* subtle panels */
+  --text: #1F2937;              /* primary text (charcoal) */
+  --muted-text: #6B7280;        /* secondary text */
+
+  /* border & shadow */
+  --border: #E6E9F2;
+  --shadow: 0 8px 20px rgba(22,24,29,0.06);
+
+  /* complementary accent palette for Quantum theme */
+  --accent: #4A6FA5;            /* quantum blue - more professional */
+  --accent-hover: #3A5A8C;      /* slightly darker for hover */
+  --accent-on: #FFFFFF;         /* text on accent */
+
+  --success: #9AD7B8;
+  --danger: #FF9B9B;
+
+  /* sidebar colors - always dark in both themes */
+  --sidebar-bg: #1F2937;              /* dark gray sidebar background */
+  --sidebar-surface: #374151;         /* elevated surfaces in sidebar */
+  --sidebar-text: #F9FAFB;            /* light text on dark sidebar */
+  --sidebar-muted-text: #D1D5DB;      /* muted text on dark sidebar */
+  --sidebar-border: #4B5563;          /* borders in dark sidebar */
+  --sidebar-hover: rgba(255, 255, 255, 0.1); /* hover state for dark sidebar */
+  --sidebar-accent: #60A5FA;          /* accent color for sidebar */
+  --sidebar-accent-hover: #3B82F6;    /* accent hover for sidebar */
+  --sidebar-new-chat-bg: #60A5FA;     /* new chat button background */
+  --sidebar-new-chat-text: #FFFFFF;   /* new chat button text */
+  --sidebar-new-chat-hover: #3B82F6;  /* new chat button hover */
+  --sidebar-button: rgba(255, 255, 255, 0.1); /* sidebar button background */
+  --sidebar-button-text: #F9FAFB;     /* sidebar button text */
+
+  /* layout sizes */
+  --sidebar-width: 280px;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --gap: 16px;
+  --transition: 180ms cubic-bezier(.2,.9,.3,1);
+  --hover-overlay: rgba(0, 0, 0, 0.05);
+  
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+}
+
+/* Dark theme variables */
+/*
+ * Cleaned QuantumChat theme.css
+ * Consolidated and repaired; focuses on a seamless floating input pill
+ */
+
+:root {
+  /* neutrals */
+  --bg: #F5F6FA;
+  --surface: #FFFFFF;
+  --muted-surface: #F2F3F7;
+  --text: #1F2937;
+  --muted-text: #6B7280;
+
+  --border: #E6E9F2;
+  --shadow: 0 8px 20px rgba(22,24,29,0.06);
+
+  --accent: #4A6FA5;
+  --accent-hover: #3A5A8C;
+  --accent-on: #FFFFFF;
+
+  --sidebar-bg: #1F2937;
+  --sidebar-surface: #374151;
+  --sidebar-text: #F9FAFB;
+  --sidebar-muted-text: #D1D5DB;
+  --sidebar-border: #4B5563;
+
+  --sidebar-width: 280px;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --gap: 16px;
+  --transition: 180ms cubic-bezier(.2,.9,.3,1);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+}
+
+.dark, [data-theme="dark"] {
+  --bg: #0E1114;
+  --surface: #121417;
+  --muted-surface: #16181A;
+  --text: #E6EEF8;
+  --muted-text: #B7C1CE;
+  --border: #22262A;
+  --shadow: 0 6px 18px rgba(0,0,0,0.5);
+  --accent: #536DFE;
+  --accent-hover: #4558DB;
+  --accent-on: #FFFFFF;
+}
+
+/* Typography */
+body {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--text);
+  background-color: var(--bg);
+  line-height: 1.45;
+  font-size: 15px;
+}
+
+h1, h2, h3, h4, h5, h6 { margin-top: 0; font-weight: 600; color: var(--text); }
+
+:focus { outline: none; box-shadow: 0 0 0 4px rgba(74, 111, 165, 0.12); border-radius: var(--radius-sm); }
+
+/* Sidebar */
+.sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); border-right: 1px solid var(--sidebar-border); height: 100vh; position: fixed; top:0; left:0; z-index: 1000; display:flex; flex-direction:column; }
+.sidebar-content { padding: var(--space-6) var(--space-4); overflow-y:auto; }
+
+/* Chat Area */
+.chat-area { background: var(--bg); display:flex; flex-direction:column; flex:1; min-height:0; position:relative; }
+.chat-header { display:flex; justify-content:space-between; align-items:center; padding:0.5rem 1rem; background:var(--surface); border-bottom:1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 12; }
+
+.chat-content { flex:1; overflow-y:auto; display:flex; flex-direction:column; position:relative; min-height:0; padding: 0 var(--space-12); }
+
+/* Main messages container - center content and reserve bottom space for floating pill */
+.chat-messages-container { 
+  flex:1; 
+  /* top/bottom small padding, larger left/right to create ChatGPT-like horizontal gutters */
+  padding: var(--space-3) var(--space-12) 120px var(--space-12); 
+  width:100%; 
+  max-width:880px; 
+  margin:18px auto; 
+  display:flex; 
+  flex-direction:column; 
+  background: var(--surface); 
+  border-radius: calc(var(--radius) + 4px); 
+  box-shadow: 0 10px 30px rgba(17,24,39,0.04);
+  border: 1px solid var(--border);
+}
+
+.empty-chat-state { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; text-align:center; margin:2rem auto; padding:1.25rem 0; }
+
+.msg-container { display:flex; margin-bottom:var(--space-3); width:100%; }
+.msg-content-wrapper { max-width:100%; width:100%; }
+.bot-container { justify-content:flex-start; position:relative; padding: var(--space-2) 0; width:100%; }
+.user-container { justify-content:flex-end; padding: var(--space-2) 0; }
+.msg { display:inline-block; padding: calc(var(--space-2) + 4px) var(--space-4); border-radius:12px; max-width:76ch; word-wrap:break-word; }
+.msg.bot { background: var(--muted-surface); width:100%; }
+.msg.user { background: var(--accent); color: var(--accent-on); box-shadow: 0 6px 18px rgba(74,111,165,0.08); }
+
+/* Slight separator between messages inside the card */
+.chat-messages-container .msg-container + .msg-container { border-top: 1px solid rgba(0,0,0,0.03); }
+
+/* Chat Input - seamless container with centered pill */
+
+/* Chat input: sticky at bottom when messages exist; centered floating when empty */
+.chat-input-container {
+  background: transparent;
+  border-top: none;
+  padding: var(--space-2) 0;
+  width: 100%;
+  flex-shrink: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+}
+.chat-input-wrapper { max-width:768px; margin:0 auto; width:100%; padding: 0 var(--space-4); }
+
+/* On larger viewports provide wider side gutters so content feels centered with breathing room */
+@media (min-width: 1200px) {
+  /* Use the same horizontal padding as the input wrapper for consistent gutters */
+  .chat-content { padding: 0 var(--space-12); }
+  .chat-messages-container { padding-left: var(--space-12); padding-right: var(--space-12); }
+  .chat-input-wrapper { padding: 0 var(--space-12); }
+}
+
+/* When no messages exist, center the messages container vertically */
+.chat-area:not(.has-messages) .chat-messages-container {
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 0;
+}
+
+/* Keep header buttons styled and a thin scrollbar as earlier */
+.chat-header button { border-radius: 8px; padding: 6px; transition: background 0.18s ease, transform 0.12s ease; }
+.chat-header button:hover { background: var(--hover-overlay); }
+.chat-content { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--muted-text) transparent; }
+.chat-content::-webkit-scrollbar { width: 8px; }
+.chat-content::-webkit-scrollbar-track { background: transparent; }
+.chat-content::-webkit-scrollbar-thumb { background: rgba(107,114,128,0.32); border-radius: 6px; }
+.chat-content::-webkit-scrollbar-thumb:hover { background: rgba(107,114,128,0.48); }
+
+/* When there are messages, fix the input to the bottom of the viewport to mimic ChatGPT */
+.chat-area.has-messages .chat-input-container {
+  position: fixed;
+  left: var(--sidebar-width);
+  right: 0;
+  bottom: 18px;
+  display: flex;
+  justify-content: center;
+  z-index: 30;
+  pointer-events: none; /* prevent click-through; inner controls will enable pointer-events */
+}
+.chat-area.has-messages .chat-input-container .chat-input-wrapper,
+.chat-area.has-messages .chat-input-container .chat-input-pill {
+  pointer-events: auto; /* re-enable interactions inside the pill */
+}
+
+/* When no messages exist, keep the pill in-flow and centered vertically as before */
+.chat-area:not(.has-messages) .chat-messages-container {
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 0; /* no reserved bottom space when centered */
+}
+.chat-area:not(.has-messages) .chat-input-container {
+  position: static;
+}
+
+/* When sidebar is collapsed (narrow left rail), offset the fixed input accordingly */
+.chat-area.sidebar-collapsed.has-messages .chat-input-container {
+  left: 60px; /* matches collapsed sidebar width in Sidebar component */
+}
+
+/* On small screens, let the input span nearly full width and align left:0 */
+@media (max-width: 767px) {
+  .chat-area.has-messages .chat-input-container {
+    left: 0;
+    right: 0;
+    padding: 0 12px;
+    bottom: 12px;
+  }
+  .chat-input-pill { width: calc(100% - 48px); }
+}
+
+.chat-input-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  width: min(820px, 100%);
+}
+.pill-input {
+  flex: 1 1 auto;
+  min-height: 44px;
+  height: 44px;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+}
+.pill-action { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:10px; background:transparent; border:none; color:var(--muted-text); cursor:pointer; padding:4px; }
+.pill-action svg { width:18px; height:18px; }
+.pill-actions-right { display:inline-flex; align-items:center; gap:8px; }
+.send-btn { box-shadow: 0 4px 12px rgba(74,111,165,0.12); }
+
+/* Center the small note under the pill */
+.pill-note { margin-top:8px; text-align:center; width:100%; max-width:768px; margin-left:auto; margin-right:auto; color:var(--muted-text); font-size:12px; }
+
+/* Message actions (placed below the message bubble, like ChatGPT) */
+.msg {
+  position: relative;
+}
+.msg .msg-actions {
+  display:flex;
+  gap:8px;
+  margin-top:8px;
+  align-items:center;
+}
+.msg-action-btn {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:36px;
+  height:32px;
+  border-radius:8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted-text);
+  cursor: pointer;
+  padding:6px 8px;
+  transition: background-color var(--transition), color var(--transition), transform 120ms ease;
+}
+.msg-action-btn:hover {
+  background: var(--muted-surface);
+  color: var(--text);
+  transform: translateY(-2px);
+}
+
+/* Mic pulse animation */
+@keyframes micPulse { 0% { box-shadow:0 0 0 0 rgba(83,109,254,0.18); } 70% { box-shadow:0 0 0 8px rgba(83,109,254,0); } 100% { box-shadow:0 0 0 0 rgba(83,109,254,0); } }
+.pill-action.mic-btn.recording { animation: micPulse 1.6s infinite; }
+
+.btn.ghost { background:transparent; color:var(--text); }
+.btn.ghost:hover { background: var(--muted-surface); }
+
+/* Settings modal */
+.settings-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter: blur(8px); display:flex; align-items:center; justify-content:center; z-index:1001; }
+.settings-container { background:var(--surface); color:var(--text); border-radius:var(--radius); width:95%; max-width:600px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:var(--shadow); border:1px solid var(--border); }
+
+/* Responsive tweaks */
+@media (max-width:767px) {
+  .chat-input-pill { width: calc(100% - 48px); }
+  .pill-note { padding: 0 12px; }
+  .chat-messages-container { padding-bottom: 160px; }
+}
+
+/* Compact popover (header dropdown) */
+.share-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  border-radius: 8px;
+  padding: 10px 8px 8px 8px; /* extra top padding to accommodate top-close */
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 1200;
+  color: var(--text); /* ensure readable text in both themes */
+}
+.share-popover-item {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:6px;
+  background:transparent;
+  border:none;
+  cursor:pointer;
+  text-align:left;
+  color: var(--text);
+}
+.share-popover-item:hover { background: var(--muted-surface); color: var(--text); }
+.share-popover-item svg { width: 16px; height: 16px; color: var(--muted-text); }
+.share-popover-item:hover svg { color: var(--text); }
+.share-popover-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--muted-text);
+}
+.share-popover-close:hover { color: var(--text); background: var(--muted-surface); }
+
+/* End of cleaned stylesheet */
+  /* Better input on mobile */
+  .input {
+    padding: var(--space-3);
+    font-size: 16px; /* Prevents zooming on iOS */
+  }
+  
+  /* Make sure all buttons are easily tappable */
+  .btn {
+    min-height: 44px;
+    padding: var(--space-2) var(--space-3);
+  }
+
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Accessibility Helpers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Toggle Switches */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--muted-surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  transition: 0.3s ease;
+  cursor: pointer;
+}
+
+.toggle-slider:before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background: var(--muted-text);
+  border-radius: 50%;
+  transition: 0.3s ease;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+  background: var(--accent-on);
+}
+
+/* Auth form specific */
+.auth-form {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: var(--space-5);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.auth-container {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  background: var(--muted-surface);
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
+.auth-tab {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition);
+  border: none;
+  background: transparent;
+  color: var(--muted-text);
+}
+
+.auth-tab.active {
+  background: var(--accent);
+  color: var(--accent-on);
+}
+
+.social-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  transition: transform var(--transition), box-shadow var(--transition);
+  cursor: pointer;
+}
+
+.social-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+/* Auth branding features */
+.auth-branding-feature {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.auth-feature-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--muted-surface);
+  border: 1px solid var(--border);
+}
+
+/* Ensure main-content doesn't get unexpected global margins
+   MainLayout sets margin-left inline; this rule prevents other styles
+   from overriding it and provides a safe default. */
+.app-container > .main-content {
+  margin-left: 0; /* MainLayout will set this inline */
+  padding: 0;     /* avoid double padding with sidebar CSS */
+  box-sizing: border-box;
+}
+
+/* Search modal result item styles */
+.search-result-item.light {
+  background: transparent;
+  color: var(--text);
+}
+.search-result-item.light:hover {
+  background: #f8f9fa;
+}
+.search-result-item.dark {
+  background: transparent;
+  color: var(--text);
+}
+.search-result-item.dark:hover {
+  background: #222;
+}

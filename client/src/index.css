@@ -1,5 +1,6 @@
 
 @import 'bootstrap/dist/css/bootstrap.min.css';
+@import './styles/theme.css';
 
 /* Modal animations */
 @keyframes modalFadeIn {
@@ -13,91 +14,29 @@
   }
 }
 
-/* CSS Custom Properties - Clean Single Color Theme */
+/* Legacy variables retained for backward compatibility 
+   These map to our new theme.css variables */
 :root {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8f7fc;
-  --bg-hover: #f0effa;
-  --bg-disabled: #f5f5f5;
-  --text-primary: #2d2d2d;
-  --text-secondary: #666666;
-  --text-disabled: #999999;
-  --text-placeholder: #aaaaaa;
-  --border-color: #e8e7f3;
-  --primary-color: #B7B1F2;
-  --primary-dark: #a59de8;
-  --primary-light: #f0efff;
-  --accent-color: #B7B1F2;
-  --success-color: #42b883;
-  --warning-color: #f39c12;
-  --error-color: #e74c3c;
-  --shadow-light: 0 2px 4px rgba(183, 177, 242, 0.08);
-  --shadow-medium: 0 4px 8px rgba(183, 177, 242, 0.12);
-  --sidebar-bg: #B7B1F2;
-  --sidebar-hover: rgba(255, 255, 255, 0.1);
+  --bg-primary: var(--surface);
+  --bg-secondary: var(--muted-surface);
+  --bg-hover: var(--muted-surface);
+  --text-primary: var(--text);
+  --text-secondary: var(--muted-text);
+  --border-color: var(--border);
+  --primary-color: var(--accent);
+  --primary-dark: var(--accent-hover);
+  --primary-light: rgba(108, 92, 231, 0.1);
+  --shadow-light: var(--shadow);
 }
 
-/* Light theme explicit (fallback) */
-html[data-theme="light"], 
-html.light, 
-body.light, 
-:root[data-theme="light"] {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8f7fc;
-  --bg-hover: #f0effa;
-  --bg-disabled: #f5f5f5;
-  --text-primary: #2d2d2d;
-  --text-secondary: #666666;
-  --text-disabled: #999999;
-  --text-placeholder: #aaaaaa;
-  --border-color: #e8e7f3;
-  --primary-color: #B7B1F2;
-  --primary-dark: #a59de8;
-  --primary-light: #f0efff;
-  --accent-color: #B7B1F2;
-  --sidebar-bg: #B7B1F2;
-  --sidebar-hover: rgba(255, 255, 255, 0.1);
-  --shadow-light: 0 2px 4px rgba(183, 177, 242, 0.08);
-  --shadow-medium: 0 4px 8px rgba(183, 177, 242, 0.12);
-}
-
-/* Dark theme overrides */
-html[data-theme="dark"], 
-html.dark, 
-body.dark, 
-:root[data-theme="dark"] {
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #242424;
-  --bg-hover: #333333;
-  --bg-disabled: #404040;
-  --text-primary: #ffffff;
-  --text-secondary: #cccccc;
-  --text-disabled: #666666;
-  --text-placeholder: #999999;
-  --border-color: #404040;
-  --primary-color: #4F46E5;
-  --primary-dark: #3730A3;
-  --primary-light: #312e81;
-  --accent-color: #4F46E5;
-  --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.4);
-  --sidebar-bg: #4a5568;
-  --sidebar-hover: rgba(255, 255, 255, 0.05);
-}
-
-/* Custom styles - Clean single color professional */
+/* Clean up old gradient styles */
 .gradient-bg {
-  background: var(--bg-secondary) !important;
-  border: 1px solid var(--border-color) !important;
-}
-
-.dark .gradient-bg {
-  background: var(--bg-secondary) !important;
-  border: 1px solid var(--border-color) !important;
+  background: var(--muted-surface) !important;
+  border: 1px solid var(--border) !important;
 }
 
 .gradient-text {
-  color: var(--primary-color) !important;
+  color: var(--accent) !important;
   font-weight: 500;
 }
 
@@ -107,69 +46,6 @@ body.dark,
 
 .transition-colors {
   transition: color 0.2s ease, background-color 0.2s ease;
-}
-
-/* Dark mode overrides for Bootstrap classes - Professional dark theme */
-.dark {
-  color: #e8e8e8 !important;
-}
-
-.dark .bg-light {
-  background-color: #2d2d2d !important;
-}
-
-.dark .bg-white {
-  background-color: #1a1a1a !important;
-}
-
-.dark .bg-secondary {
-  background-color: #2d2d2d !important;
-}
-
-.dark .text-dark {
-  color: #e8e8e8 !important;
-}
-
-.dark .text-muted {
-  color: #b0b0b0 !important;
-}
-
-.dark .border-light {
-  border-color: #404040 !important;
-}
-
-.dark .border-secondary {
-  border-color: #404040 !important;
-}
-
-.dark .form-control {
-  background-color: #2d2d2d !important;
-  border-color: #404040 !important;
-  color: #e8e8e8 !important;
-}
-
-.dark .form-control::placeholder {
-  color: #888888 !important;
-}
-
-.dark .btn-outline-secondary {
-  border-color: #404040 !important;
-  color: #e8e8e8 !important;
-}
-
-.dark .btn-outline-secondary:hover {
-  background-color: #3a3a3a !important;
-  border-color: #404040 !important;
-}
-
-.dark .btn-outline-light {
-  border-color: #404040 !important;
-  color: #e8e8e8 !important;
-}
-
-.dark .btn-outline-light:hover {
-  background-color: #3a3a3a !important;
-  border-color: #404040 !important;
 }
 
 /* Typing Animation Styles */
@@ -183,7 +59,7 @@ body.dark,
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: var(--primary-color);
+  background-color: var(--accent);
   animation: typing 1.4s infinite ease-in-out;
 }
 
@@ -197,7 +73,7 @@ body.dark,
 
 .typing-cursor {
   animation: blink 1s infinite;
-  color: #6c757d;
+  color: var(--muted-text);
   margin-left: 2px;
 }
 
@@ -215,4 +91,124 @@ body.dark,
 @keyframes blink {
   0%, 50% { opacity: 1; }
   51%, 100% { opacity: 0; }
+}
+
+/* Message Action Buttons */
+.msg-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.msg:hover .msg-actions {
+  opacity: 1;
+}
+
+.msg-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted-text);
+  cursor: pointer;
+  transition: background 0.18s ease, transform 120ms ease;
+  padding: 6px;
+  border: 1px solid transparent;
+}
+
+.msg-action-btn:hover {
+  background: rgba(0,0,0,0.04);
+  color: var(--text);
+  transform: translateY(-2px);
+}
+
+.msg-action-btn:active { transform: translateY(0); }
+
+/* Specific button styling */
+.msg-action-btn[title="Read aloud"]:hover {
+  color: #10b981; /* green for speak */
+}
+
+.msg-action-btn[title="Copy message"]:hover {
+  color: #3b82f6; /* blue for copy */
+}
+
+.msg-action-btn[title="Share message"]:hover {
+  color: #8b5cf6; /* purple for share */
+}
+
+/* Toast Notification */
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Chat layout: make header sticky and messages scrollable */
+.chat-area {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.chat-header {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Sticky bottom input container */
+.chat-input-container {
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  z-index: 45;
+}
+
+/* make room so last message isn't hidden behind the input */
+.chat-content .chat-messages-container {
+  padding-bottom: 92px; /* a bit larger than input to account for safe area */
 }

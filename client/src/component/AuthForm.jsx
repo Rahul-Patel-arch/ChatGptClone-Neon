@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sun, Moon, Eye, EyeOff } from 'lucide-react';
-import gptIcon from '../assets/gpt-clone-icon.png';
+import gptIcon from '../assets/quantum-chat-icon.png';
 import SocialLoginModal from './SocialLoginModal';
 
 export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
@@ -292,12 +292,12 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
 
   return (
     <>
-      <div className={`min-vh-100 d-flex align-items-center justify-content-center gradient-bg`}>
-        <div className="container-fluid">
-          <div className="row justify-content-center">
-            {/* Branding Section */}
-            <div className="col-lg-6 d-none d-lg-flex align-items-center justify-content-center">
-              <div className="text-center p-5">
+      <div className="auth-container">
+        <div className="container-fluid p-0">
+          <div className="row g-0 justify-content-center">
+            {/* App Logo for Mobile - Only visible on mobile */}
+            <div className="col-12 d-flex d-lg-none align-items-center justify-content-center mb-3">
+              <div className="text-center">
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -306,88 +306,68 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                   <img 
                     src={gptIcon} 
                     alt="QuantumChat Logo" 
-                    style={{width: '120px', height: '120px'}} 
-                    className="mb-4"
+                    style={{width: '60px', height: '60px'}} 
+                    className="mb-1"
                   />
-                  <h1 className="display-4 fw-bold mb-3" style={{
-                    color: '#2d3436',
-                    fontWeight: '700'
-                  }}>QuantumChat</h1>
-                  <p className="lead mb-4" style={{
-                    color: '#636e72',
-                    fontWeight: '400'
-                  }}>
-                    Enterprise-grade AI platform delivering intelligent conversational experiences through cutting-edge language models
+                  <h2 className="fw-bold mb-0">QuantumChat</h2>
+                </motion.div>
+              </div>
+            </div>
+            
+            {/* Branding Section - Hidden on mobile */}
+            <div className="col-lg-6 d-none d-lg-flex align-items-center justify-content-center">
+              <div className="text-center p-4">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <img 
+                    src={gptIcon} 
+                    alt="QuantumChat Logo" 
+                    style={{width: '100px', height: '100px'}} 
+                    className="mb-3"
+                  />
+                  <h1 className="display-5 fw-bold mb-2">QuantumChat</h1>
+                  <p className="lead mb-3">
+                    Enterprise-grade AI platform delivering intelligent conversational experiences
                   </p>
-                  <div className="mt-4">
-                    <div className="d-flex flex-column gap-3 text-start">
-                      <div className="d-flex align-items-center gap-3">
-                        <div className="rounded-circle p-2 d-flex align-items-center justify-content-center" style={{
-                          width: '40px', 
-                          height: '40px',
-                          background: 'rgba(183, 177, 242, 0.15)',
-                          border: '1px solid rgba(183, 177, 242, 0.3)'
-                        }}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#6c5ce7">
+                  <div className="mt-3">
+                    <div className="d-flex flex-column gap-2 text-start">
+                      <div className="auth-branding-feature">
+                        <div className="auth-feature-icon">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent)">
                             <path d="M12 2L2 7L12 12L22 7L12 2Z" opacity="0.8"/>
                             <path d="M2 17L12 22L22 17"/>
                             <path d="M2 12L12 17L22 12"/>
                           </svg>
                         </div>
                         <div>
-                          <div className="fw-semibold" style={{
-                            color: '#2d3436',
-                            fontWeight: '600'
-                          }}>Advanced AI Technology</div>
-                          <small style={{
-                            color: '#636e72',
-                            fontWeight: '400'
-                          }}>Next-generation language processing capabilities</small>
+                          <div className="fw-semibold">Advanced AI Technology</div>
+                          <small className="text-muted">Next-generation language processing</small>
                         </div>
                       </div>
-                      <div className="d-flex align-items-center gap-3">
-                        <div className="rounded-circle p-2 d-flex align-items-center justify-content-center" style={{
-                          width: '40px', 
-                          height: '40px',
-                          background: 'rgba(253, 183, 234, 0.15)',
-                          border: '1px solid rgba(253, 183, 234, 0.3)'
-                        }}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#6c5ce7">
+                      <div className="auth-branding-feature">
+                        <div className="auth-feature-icon">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent)">
                             <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z"/>
                           </svg>
                         </div>
                         <div>
-                          <div className="fw-semibold" style={{
-                            color: '#2d3436',
-                            fontWeight: '600'
-                          }}>Intelligent Conversations</div>
-                          <small style={{
-                            color: '#636e72',
-                            fontWeight: '400'
-                          }}>Context-aware dialogue with natural language understanding</small>
+                          <div className="fw-semibold">Intelligent Conversations</div>
+                          <small className="text-muted">Context-aware dialogue with natural language</small>
                         </div>
                       </div>
-                      <div className="d-flex align-items-center gap-3">
-                        <div className="rounded-circle p-2 d-flex align-items-center justify-content-center" style={{
-                          width: '40px', 
-                          height: '40px',
-                          background: 'rgba(255, 220, 204, 0.15)',
-                          border: '1px solid rgba(255, 220, 204, 0.3)'
-                        }}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#6c5ce7">
+                      <div className="auth-branding-feature">
+                        <div className="auth-feature-icon">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent)">
                             <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/>
-                            <path d="M9 12L11 14L15 10" stroke="#6c5ce7" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M9 12L11 14L15 10" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </div>
                         <div>
-                          <div className="fw-semibold" style={{
-                            color: '#2d3436',
-                            fontWeight: '600'
-                          }}>Enterprise Security</div>
-                          <small style={{
-                            color: '#636e72',
-                            fontWeight: '400'
-                          }}>End-to-end encryption with privacy-first architecture</small>
+                          <div className="fw-semibold">Enterprise Security</div>
+                          <small className="text-muted">End-to-end encryption with privacy-first design</small>
                         </div>
                       </div>
                     </div>
@@ -397,71 +377,34 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
             </div>
 
             {/* Form Section */}
-            <div className="col-lg-6 col-md-8 col-sm-10">
+            <div className="col-lg-6 col-md-10 col-sm-12">
               <motion.div
                 initial={{ x: 50, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className={`p-5 shadow-lg rounded-4 ${
-                  darkMode ? 'bg-dark text-white' : 'bg-white'
-                }`}
-                style={{ maxWidth: '500px', margin: '0 auto' }}
+                className="auth-form"
               >
                 {/* Dark Mode Toggle */}
-                <div className="text-end mb-3">
+                <div className="text-end mb-2">
                   <button
                     onClick={toggleDarkMode}
-                    className={`btn btn-sm rounded-3 ${
-                      darkMode ? 'btn-outline-light' : 'btn-outline-primary'
-                    }`}
-                    style={{
-                      border: darkMode ? '1px solid rgba(255, 255, 255, 0.5)' : '1px solid #7c73e6',
-                      color: darkMode ? 'white' : '#7c73e6',
-                      padding: '6px 10px'
-                    }}
+                    className="btn ghost"
+                    aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                   >
                     {darkMode ? <Sun size={16} /> : <Moon size={16} />}
                   </button>
                 </div>
 
                 {/* Auth Tabs */}
-                <div className="d-flex mb-4 rounded-3 p-1" style={{
-                  backgroundColor: darkMode ? '#333' : '#f8f9fa'
-                }}>
+                <div className="auth-tabs">
                   <button
-                    className={`btn flex-fill rounded-3 fw-semibold ${
-                      isLoginView 
-                        ? 'btn-primary text-white' 
-                        : (darkMode ? 'text-white' : 'text-dark')
-                    }`}
-                    style={{
-                      background: isLoginView 
-                        ? (darkMode ? 'var(--primary-color)' : '#7c73e6') 
-                        : (darkMode ? 'var(--bg-secondary)' : '#f5f5f5'),
-                      border: isLoginView ? 'none' : (darkMode ? '1px solid var(--border-color)' : '1px solid #e0e0e0'),
-                      color: isLoginView ? 'white' : (darkMode ? 'var(--text-primary)' : '#555'),
-                      fontWeight: '600',
-                      boxShadow: isLoginView ? (darkMode ? 'none' : '0 2px 4px rgba(124, 115, 230, 0.15)') : 'none'
-                    }}
+                    className={`auth-tab ${isLoginView ? 'active' : ''}`}
                     onClick={() => switchView('login')}
                   >
                     LOG IN
                   </button>
                   <button
-                    className={`btn flex-fill rounded-3 fw-semibold ${
-                      !isLoginView 
-                        ? 'btn-primary text-white' 
-                        : (darkMode ? 'text-white' : 'text-dark')
-                    }`}
-                    style={{
-                      background: !isLoginView 
-                        ? (darkMode ? 'var(--primary-color)' : '#7c73e6') 
-                        : (darkMode ? 'var(--bg-secondary)' : '#f5f5f5'),
-                      border: !isLoginView ? 'none' : (darkMode ? '1px solid var(--border-color)' : '1px solid #e0e0e0'),
-                      color: !isLoginView ? 'white' : (darkMode ? 'var(--text-primary)' : '#555'),
-                      fontWeight: '600',
-                      boxShadow: !isLoginView ? (darkMode ? 'none' : '0 2px 4px rgba(124, 115, 230, 0.15)') : 'none'
-                    }}
+                    className={`auth-tab ${!isLoginView ? 'active' : ''}`}
                     onClick={() => switchView('signup')}
                   >
                     SIGN UP
@@ -475,7 +418,7 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="alert alert-danger rounded-3 mb-3"
+                      className="alert alert-danger rounded-3 mb-2 py-2"
                     >
                       {error}
                     </motion.div>
@@ -485,7 +428,7 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="alert alert-success rounded-3 mb-3"
+                      className="alert alert-success rounded-3 mb-2 py-2"
                     >
                       {success}
                     </motion.div>
@@ -494,20 +437,15 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
 
                 {/* Auth Form */}
                 <form onSubmit={isLoginView ? handleLogin : handleSignup}>
-                  <div className="mb-3 position-relative">
-                    <label htmlFor="email" className="form-label visually-hidden">Email</label>
+                  <div className="mb-2 position-relative">
+                    <label htmlFor="email" className="form-label small mb-1">Email</label>
                     <input
                       id="email"
                       type="email"
-                      className={`form-control form-control-lg rounded-3 auth-input ${
-                        darkMode ? 'bg-dark text-white border-secondary' : ''
-                      } ${
+                      className={`input ${
                         emailValid === true ? 'is-valid' : 
                         emailValid === false ? 'is-invalid' : ''
                       }`}
-                      style={{
-                        '--bs-form-control-placeholder-color': darkMode ? '#adb5bd' : '#6c757d'
-                      }}
                       placeholder="Enter your email address"
                       value={email}
                       onChange={(e) => {
@@ -518,13 +456,8 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                       required
                     />
                     {emailValid === false && (
-                      <div className="invalid-feedback">
+                      <div className="invalid-feedback small">
                         Please enter a valid email address.
-                      </div>
-                    )}
-                    {emailValid === true && (
-                      <div className="valid-feedback">
-                        Email looks good!
                       </div>
                     )}
                   </div>
@@ -534,21 +467,16 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="mb-3"
+                      className="mb-2"
                     >
-                      <label htmlFor="username" className="form-label visually-hidden">Username</label>
+                      <label htmlFor="username" className="form-label small mb-1">Username</label>
                       <input
                         id="username"
                         type="text"
-                        className={`form-control form-control-lg rounded-3 auth-input ${
-                          darkMode ? 'bg-dark text-white border-secondary' : ''
-                        } ${
+                        className={`input ${
                           usernameValid === true ? 'is-valid' : 
                           usernameValid === false ? 'is-invalid' : ''
                         }`}
-                        style={{
-                          '--bs-form-control-placeholder-color': darkMode ? '#adb5bd' : '#6c757d'
-                        }}
                         placeholder="Choose a unique username"
                         value={username}
                         onChange={(e) => {
@@ -559,67 +487,56 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                         required={!isLoginView}
                       />
                       {usernameValid === false && (
-                        <div className="invalid-feedback">
-                          Username must be at least 3 characters and contain only letters, numbers, and underscores.
-                        </div>
-                      )}
-                      {usernameValid === true && (
-                        <div className="valid-feedback">
-                          Username is available!
+                        <div className="invalid-feedback small">
+                          Username must be at least 3 characters (letters, numbers, underscores).
                         </div>
                       )}
                     </motion.div>
                   )}
 
-                  <div className="mb-3 position-relative">
-                    <label htmlFor="password" className="form-label visually-hidden">Password</label>
-                    <input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      className={`form-control form-control-lg rounded-3 auth-input ${
-                        darkMode ? 'bg-dark text-white border-secondary' : ''
-                      }`}
-                      style={{
-                        '--bs-form-control-placeholder-color': darkMode ? '#adb5bd' : '#6c757d'
-                      }}
-                      placeholder={isLoginView ? "Enter your password" : "Create a secure password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="btn position-absolute top-50 end-0 translate-middle-y me-2"
-                      style={{ border: 'none', background: 'none' }}
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
+                  <div className="mb-2 position-relative">
+                    <label htmlFor="password" className="form-label small mb-1">Password</label>
+                    <div className="position-relative">
+                      <input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        className="input"
+                        placeholder={isLoginView ? "Enter your password" : "Create a secure password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="btn ghost position-absolute top-50 end-0 translate-middle-y"
+                        style={{ padding: '6px' }}
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                     
-                    {/* Password Strength Indicator for Signup */}
+                    {/* Password Strength Indicator for Signup - More compact */}
                     {!isLoginView && password && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="mt-2"
+                        className="mt-1"
                       >
-                        <div className="d-flex justify-content-between align-items-center mb-1">
-                          <small className={darkMode ? 'text-light' : 'text-muted'}>
-                            Password Strength:
+                        <div className="d-flex justify-content-between align-items-center">
+                          <small className="text-muted" style={{fontSize: '11px'}}>
+                            Strength: <span style={{ color: passwordStrength.color }}>{passwordStrength.label}</span>
                           </small>
-                          <small style={{ color: passwordStrength.color, fontWeight: 'bold' }}>
-                            {passwordStrength.label}
-                          </small>
-                        </div>
-                        <div className="progress" style={{ height: '4px' }}>
-                          <div
-                            className="progress-bar"
-                            style={{
-                              width: `${(passwordStrength.score / 6) * 100}%`,
-                              backgroundColor: passwordStrength.color,
-                              transition: 'all 0.3s ease'
-                            }}
-                          />
+                          <div className="progress" style={{ height: '4px', width: '60%' }}>
+                            <div
+                              className="progress-bar"
+                              style={{
+                                width: `${(passwordStrength.score / 6) * 100}%`,
+                                backgroundColor: passwordStrength.color,
+                                transition: 'all 0.3s ease'
+                              }}
+                            />
+                          </div>
                         </div>
                       </motion.div>
                     )}
@@ -636,16 +553,16 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                           checked={rememberMe}
                           onChange={(e) => setRememberMe(e.target.checked)}
                         />
-                        <label className="form-check-label small" htmlFor="rememberMe">
+                        <label className="form-check-label small" htmlFor="rememberMe" style={{fontSize: '12px'}}>
                           Remember Me
                         </label>
                       </div>
-                      <a href="#forgot" className="small text-decoration-none">
+                      <a href="#forgot" className="small text-decoration-none" style={{fontSize: '12px'}}>
                         Forgot Password?
                       </a>
                     </div>
                   ) : (
-                    <div className="mb-3">
+                    <div className="mb-2">
                       <div className="form-check">
                         <input
                           type="checkbox"
@@ -655,7 +572,7 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                           onChange={(e) => setAgreeTerms(e.target.checked)}
                           required
                         />
-                        <label className="form-check-label small" htmlFor="agreeTerms">
+                        <label className="form-check-label" htmlFor="agreeTerms" style={{fontSize: '12px'}}>
                           I agree to the <a href="#terms" className="text-decoration-none">Terms & Conditions</a>
                         </label>
                       </div>
@@ -666,14 +583,7 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
-                    className="btn w-100 py-3 fw-bold rounded-3 mb-3"
-                    style={{
-                      background: darkMode ? 'var(--primary-color)' : '#7c73e6', // Darker in light mode
-                      border: 'none',
-                      color: 'white',
-                      boxShadow: darkMode ? 'var(--shadow-light)' : '0 4px 6px rgba(124, 115, 230, 0.25)',
-                      fontWeight: '600'
-                    }}
+                    className="btn primary w-100 py-2 fw-bold mb-2"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -686,79 +596,47 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                 </form>
 
                 {/* Divider */}
-                <div className="text-center mb-3">
-                  <span className={`px-3 ${darkMode ? 'text-light' : 'text-muted'}`}
-                    style={{ backgroundColor: darkMode ? '#212529' : 'white' }}>
-                    or
-                  </span>
-                  <hr className="mt-n2" />
+                <div className="text-center mb-2">
+                  <span className="px-3 text-muted small">or</span>
+                  <hr className="mt-n2 mb-2" />
                 </div>
 
                 {/* Social Login */}
-                <div className="d-flex justify-content-center gap-3 mb-4">
+                <div className="d-flex flex-wrap justify-content-center gap-2 mb-3">
                   <button
-                    className={`btn rounded-circle ${
-                      darkMode ? 'btn-outline-light' : 'btn-outline-primary'
-                    }`}
-                    style={{ 
-                      width: '50px', 
-                      height: '50px',
-                      border: darkMode ? '1px solid rgba(255, 255, 255, 0.5)' : '2px solid #6c5ce7',
-                      color: darkMode ? 'white' : '#6c5ce7',
-                      fontWeight: '600',
-                      boxShadow: darkMode ? 'none' : '0 2px 4px rgba(108, 92, 231, 0.15)'
-                    }}
+                    className="social-button"
                     onClick={() => handleSocialLogin('Google')}
                     title="Continue with Google"
                   >
                     G
                   </button>
                   <button
-                    className={`btn rounded-circle ${
-                      darkMode ? 'btn-outline-light' : 'btn-outline-primary'
-                    }`}
-                    style={{ 
-                      width: '50px', 
-                      height: '50px',
-                      border: darkMode ? '1px solid rgba(255, 255, 255, 0.5)' : '2px solid #6c5ce7',
-                      color: darkMode ? 'white' : '#6c5ce7',
-                      fontWeight: '600',
-                      boxShadow: darkMode ? 'none' : '0 2px 4px rgba(108, 92, 231, 0.15)'
-                    }}
+                    className="social-button"
                     onClick={() => handleSocialLogin('Microsoft')}
                     title="Continue with Microsoft"
                   >
                     M
                   </button>
                   <button
-                    className={`btn rounded-circle ${
-                      darkMode ? 'btn-outline-light' : 'btn-outline-primary'
-                    }`}
-                    style={{ 
-                      width: '50px', 
-                      height: '50px',
-                      border: darkMode ? '1px solid rgba(255, 255, 255, 0.5)' : '2px solid #6c5ce7',
-                      color: darkMode ? 'white' : '#6c5ce7',
-                      fontWeight: '600',
-                      boxShadow: darkMode ? 'none' : '0 2px 4px rgba(108, 92, 231, 0.15)'
-                    }}
+                    className="social-button"
                     onClick={() => handleSocialLogin('Apple')}
                     title="Continue with Apple"
                   >
-                    🍎
+                    A
                   </button>
                 </div>
 
                 {/* Switch Auth */}
                 <div className="text-center">
-                  <span className={`small ${darkMode ? 'text-light' : 'text-dark'}`}>
+                  <span className={`small ${darkMode ? 'text-light' : 'text-dark'}`} style={{fontSize: '12px'}}>
                     {isLoginView ? "Don't have an account? " : "Already have an account? "}
                     <button
                       type="button"
                       className="btn btn-link p-0 text-decoration-none"
                       style={{
                         color: darkMode ? '#a593ff' : '#6c5ce7',
-                        fontWeight: '600'
+                        fontWeight: '600',
+                        fontSize: '12px'
                       }}
                       onClick={() => switchView(isLoginView ? 'signup' : 'login')}
                     >
