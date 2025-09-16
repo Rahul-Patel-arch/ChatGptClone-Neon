@@ -1,0 +1,63 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+}
+
+.modal-content-wrapper {
+  position: relative;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 100%;
+  margin: 1rem;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.auth-provider-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.apple-logo-dark {
+    filter: invert(1);
+}
+
+.dummy-input {
+    background-color: #f0f2f5;
+    border: 1px solid #ccc;
+    pointer-events: none; /* Make it non-interactive */
+}
+
+.dummy-input.dark {
+    background-color: #3a3b3c;
+    border: 1px solid #555;
+    color: #e4e6eb;
+}
+
+.dummy-link {
+    font-size: 0.8rem;
+    color: #0067b8;
+    text-decoration: none;
+}
+.dummy-link.dark {
+    color: #4da6ff;
+}

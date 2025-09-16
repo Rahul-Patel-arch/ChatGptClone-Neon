@@ -1,7 +1,5 @@
-
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
-/* CSS Custom Properties for Settings Panel */
 :root {
   --bg-primary: #ffffff;
   --bg-secondary: #f9fafb;
@@ -17,7 +15,6 @@
   --primary-light: #eff6ff;
 }
 
-/* Dark mode CSS variables */
 [data-theme="dark"] {
   --bg-primary: #1f2937;
   --bg-secondary: #374151;
@@ -33,7 +30,6 @@
   --primary-light: #1e3a8a;
 }
 
-/* Custom styles to maintain the same appearance */
 .gradient-bg {
   background: linear-gradient(135deg, #f1f5f9 0%, #ffffff 50%, #faf5ff 100%);
 }
@@ -57,7 +53,6 @@
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
-/* Dark mode overrides for Bootstrap classes */
 .dark {
   color: #f1f5f9 !important;
 }
@@ -96,9 +91,15 @@
   color: #f1f5f9 !important;
 }
 
-.dark .form-control::placeholder {
+/* 
+<<<< FIX START >>>>
+This is the new, more specific rule that will force the placeholder to be visible.
+*/
+.auth-input-dark::placeholder {
   color: #9ca3af !important;
 }
+/* <<<< FIX END >>>> 
+*/
 
 .dark .btn-outline-secondary {
   border-color: #6b7280 !important;
@@ -118,4 +119,12 @@
 .dark .btn-outline-light:hover {
   background-color: #374151 !important;
   border-color: #6b7280 !important;
+}
+
+/* Hide the browser's default password reveal icon */
+input[type="password"]::-webkit-password-reveal-button,
+input[type="password"]::-ms-reveal {
+  display: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
 }
