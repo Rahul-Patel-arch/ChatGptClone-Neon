@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
+import './SearchModal.css';
 
-export default function SearchModal({ show, onClose, chats, onSelectChat, darkMode }) {
+export default function SearchModal({ show, onClose, chats = [], onSelectChat, darkMode = false }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const inputRef = useRef(null);
@@ -13,17 +14,19 @@ export default function SearchModal({ show, onClose, chats, onSelectChat, darkMo
     }
   }, [show]);
 
-  // Filter chats based on search term
+  // Filter chats based on search term. When empty, show all chats (including archived)
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setSearchResults([]);
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) {
+      setSearchResults(
+        chats
+          .slice()
+          .filter(Boolean)
+          .sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      );
       return;
     }
-
-    const term = searchTerm.toLowerCase();
-    const results = chats.filter(chat => 
-      chat.title.toLowerCase().includes(term)
-    );
+    const results = chats.filter(chat => (chat?.title || '').toLowerCase().includes(term));
     setSearchResults(results);
   }, [searchTerm, chats]);
 
@@ -47,94 +50,40 @@ export default function SearchModal({ show, onClose, chats, onSelectChat, darkMo
   if (!show) return null;
 
   return (
-    <div 
-      className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-      style={{ 
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', 
-        zIndex: 1050,
-        backdropFilter: 'blur(4px)'
-      }}
-      onClick={onClose}
-    >
-      <div 
-        className={`rounded-4 shadow ${darkMode ? 'bg-dark' : 'bg-white'}`}
-        style={{ 
-          width: '90%', 
-          maxWidth: '500px',
-          maxHeight: '80vh',
-          overflow: 'hidden',
-          animation: 'modalFadeIn 0.2s ease-out'
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Search Header */}
-        <div className="p-3 border-bottom d-flex align-items-center">
-          <Search size={18} className={`me-2 ${darkMode ? 'text-light' : 'text-muted'}`} />
+    <div className="search-modal-backdrop" onClick={onClose}>
+      <div className="search-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="search-modal-header">
+          <Search size={18} className="me-2 text-muted" />
           <input
             ref={inputRef}
             type="text"
-            className={`form-control border-0 shadow-none ${darkMode ? 'bg-dark text-white' : ''}`}
+            className="search-input"
             placeholder="Search chats..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ 
-              boxShadow: 'none',
-              outline: 'none',
-              fontSize: '16px'
-            }}
           />
-          <button 
-            className={`btn btn-sm ms-2 ${darkMode ? 'text-light' : 'text-muted'}`}
-            onClick={onClose}
-            style={{ background: 'none', border: 'none' }}
-          >
+          <button className="search-close-btn" onClick={onClose} aria-label="Close search">
             <X size={18} />
           </button>
         </div>
 
-        {/* Search Results */}
-        <div 
-          className="overflow-auto" 
-          style={{ maxHeight: 'calc(80vh - 60px)' }}
-        >
-          {searchTerm.trim() === '' ? (
-            <div className="p-4 text-center">
-              <p className={`mb-0 ${darkMode ? 'text-light' : 'text-muted'}`}>
-                Type to search your chats
-              </p>
-            </div>
-          ) : searchResults.length === 0 ? (
-            <div className="p-4 text-center">
-              <p className={`mb-0 ${darkMode ? 'text-light' : 'text-muted'}`}>
-                No chats found matching "{searchTerm}"
-              </p>
+        <div className="search-results">
+          {searchResults.length === 0 ? (
+            <div className="search-empty">
+              <p className="mb-0">{searchTerm.trim() === '' ? 'No chats yet' : `No chats found matching "${searchTerm}"`}</p>
             </div>
           ) : (
-            <div className="p-2">
+            <div>
               {searchResults.map((chat) => (
                 <div
                   key={chat.id}
-                  className={`p-3 rounded-3 mb-2 ${darkMode ? 'hover-bg-dark' : 'hover-bg-light'}`}
-                  style={{ 
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onClick={() => {
-                    onSelectChat(chat.id);
-                    onClose();
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = darkMode ? '#333' : '#f8f9fa';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = 'transparent';
-                  }}
+                  className="search-result-item"
+                  onClick={() => { onSelectChat(chat.id); onClose(); }}
                 >
-                  <div className="d-flex align-items-center">
-                    <Search size={16} className={`me-2 ${darkMode ? 'text-light' : 'text-muted'}`} />
-                    <span className={`${darkMode ? 'text-white' : 'text-dark'}`}>
-                      {chat.title}
-                    </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Search size={16} className="text-muted" />
+                    <span className="search-result-title">{chat.title}</span>
+                    {chat.archived && <small className="search-result-meta">(archived)</small>}
                   </div>
                 </div>
               ))}

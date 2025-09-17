@@ -33,28 +33,42 @@ const MarkdownMessage = ({ children, darkMode }) => {
 
           if (!inline && language) {
             return (
-              <div className="position-relative">
-                <div className="d-flex justify-content-between align-items-center p-2 border-bottom" 
+              <div className="code-block-container position-relative mb-3">
+                <div className="code-block-header d-flex justify-content-between align-items-center px-3 py-2" 
                      style={{ 
-                       backgroundColor: darkMode ? '#2d3748' : '#f7fafc',
-                       borderColor: darkMode ? '#4a5568' : '#e2e8f0'
+                       backgroundColor: darkMode ? '#2d3748' : '#f6f8fa',
+                       borderColor: darkMode ? '#4a5568' : '#d0d7de',
+                       borderBottom: `1px solid ${darkMode ? '#4a5568' : '#d0d7de'}`,
+                       borderRadius: '8px 8px 0 0',
+                       fontSize: '13px',
+                       color: darkMode ? '#e2e8f0' : '#656d76'
                      }}>
-                  <span className="small text-muted">{language}</span>
+                  <span className="code-language">{language}</span>
                   <button
                     onClick={() => copyToClipboard(codeContent, codeId)}
-                    className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
-                    style={{ fontSize: '12px' }}
+                    className="code-copy-btn d-flex align-items-center justify-content-center p-1"
+                    style={{ 
+                      background: 'transparent',
+                      border: 'none',
+                      borderRadius: '4px',
+                      width: '28px',
+                      height: '28px',
+                      color: darkMode ? '#a0aec0' : '#656d76',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = darkMode ? '#4a5568' : '#e6eaef';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = 'transparent';
+                    }}
+                    title={copiedStates[codeId] ? 'Copied!' : 'Copy code'}
                   >
                     {copiedStates[codeId] ? (
-                      <>
-                        <Check size={12} />
-                        Copied!
-                      </>
+                      <Check size={14} style={{ color: '#22c55e' }} />
                     ) : (
-                      <>
-                        <Copy size={12} />
-                        Copy
-                      </>
+                      <Copy size={14} />
                     )}
                   </button>
                 </div>
@@ -65,7 +79,9 @@ const MarkdownMessage = ({ children, darkMode }) => {
                   customStyle={{
                     margin: 0,
                     borderRadius: '0 0 8px 8px',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    backgroundColor: darkMode ? '#1a202c' : '#f6f8fa'
                   }}
                   {...props}
                 >

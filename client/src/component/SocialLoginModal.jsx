@@ -5,6 +5,8 @@ import { X, Loader } from 'lucide-react';
 export default function SocialLoginModal({ provider, darkMode, onClose, onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
 
   useEffect(() => {
     if (isLoading) {
@@ -26,6 +28,18 @@ export default function SocialLoginModal({ provider, darkMode, onClose, onSucces
   }, [isLoading, provider, onSuccess]);
 
   const handleLogin = () => {
+    // For Google we allow an inline email capture flow (no external popup)
+    if (provider === 'Google') {
+      setIsLoading(true);
+      setProgress(0);
+      // simulate creation then call onSuccess with a small user object
+      setTimeout(() => {
+        const user = { id: Date.now(), email: email || `user@google.com`, username: username || (email ? email.split('@')[0] : 'GoogleUser'), provider: 'Google', createdAt: new Date().toISOString(), lastLogin: new Date().toISOString(), isActive: true, preferences: { theme: 'system', language: 'en', notifications: true } };
+        onSuccess(provider, user);
+      }, 900);
+      return;
+    }
+
     setIsLoading(true);
     setProgress(0);
   };
@@ -63,7 +77,7 @@ export default function SocialLoginModal({ provider, darkMode, onClose, onSucces
           }}
         />
         
-        <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-dialog modal-dialog-centered modal-sm">
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -83,24 +97,24 @@ export default function SocialLoginModal({ provider, darkMode, onClose, onSucces
               />
             </div>
 
-            <div className="modal-body text-center px-5 py-4">
+            <div className="modal-body text-center px-4 py-3">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.1, type: "spring" }}
-                className="mb-4"
+                className="mb-3"
               >
                 <div
-                  className="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                  className="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
                   style={{
-                    width: '80px',
-                    height: '80px',
+                    width: '60px',
+                    height: '60px',
                     backgroundColor: getProviderColor(),
-                    fontSize: '2rem'
+                    fontSize: '1.8rem'
                   }}
                 >
                   {isLoading ? (
-                    <Loader className="text-white" size={32} style={{
+                    <Loader className="text-white" size={28} style={{
                       animation: 'spin 1s linear infinite'
                     }} />
                   ) : (
@@ -111,46 +125,40 @@ export default function SocialLoginModal({ provider, darkMode, onClose, onSucces
                 </div>
               </motion.div>
 
-              <h5 className="mb-3">
+              <h5 className="mb-2">
                 Continue with {provider}
               </h5>
 
               {!isLoading ? (
                 <div>
-                  <p className={`small mb-4 ${darkMode ? 'text-light' : 'text-muted'}`}>
-                    You'll be redirected to {provider} to complete your login securely.
-                  </p>
-
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="btn text-white px-5 py-2 rounded-pill fw-semibold mb-3"
-                    style={{
-                      backgroundColor: getProviderColor(),
-                      border: 'none',
-                      boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
-                    }}
-                    onClick={handleLogin}
-                  >
-                    Continue with {provider}
-                  </motion.button>
-
-                  <div>
-                    <small className={`${darkMode ? 'text-light' : 'text-muted'}`}>
-                      By continuing, you agree to our Terms of Service and Privacy Policy
-                    </small>
-                  </div>
+                  {provider === 'Google' ? (
+                    <div>
+                      <p className={`small mb-2 ${darkMode ? 'text-light' : 'text-muted'}`} style={{fontSize: '12px'}}>Sign in with your Google email (demo inline flow)</p>
+                      <div className="mb-2">
+                        <input type="email" className={`form-control mb-2 ${darkMode ? 'bg-dark-subtle text-white border-secondary' : ''}`} placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                        <input type="text" className={`form-control ${darkMode ? 'bg-dark-subtle text-white border-secondary' : ''}`} placeholder="Username (optional)" value={username} onChange={(e) => setUsername(e.target.value)} />
+                      </div>
+                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="btn text-white px-4 py-2 rounded-pill fw-semibold mb-2" style={{ backgroundColor: getProviderColor(), border: 'none' }} onClick={handleLogin}>Continue</motion.button>
+                      <div><small className={`${darkMode ? 'text-light' : 'text-muted'}`} style={{fontSize: '11px'}}>This is a demo inline flow. Real Google OAuth should use Google popups or server-side auth.</small></div>
+                    </div>
+                  ) : (
+                    <>
+                      <p className={`small mb-3 ${darkMode ? 'text-light' : 'text-muted'}`} style={{fontSize: '12px'}}>You'll be redirected to {provider} to complete your login.</p>
+                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="btn text-white px-4 py-2 rounded-pill fw-semibold mb-2" style={{ backgroundColor: getProviderColor(), border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }} onClick={handleLogin}>Continue</motion.button>
+                      <div><small className={`${darkMode ? 'text-light' : 'text-muted'}`} style={{fontSize: '11px'}}>By continuing, you agree to our Terms of Service</small></div>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div>
-                  <p className="mb-3">
+                  <p className="mb-2" style={{fontSize: '14px'}}>
                     Connecting to {provider}...
                   </p>
 
-                  <div className="mb-3">
+                  <div className="mb-2">
                     <div 
                       className={`progress ${darkMode ? 'bg-secondary' : ''}`}
-                      style={{ height: '8px', borderRadius: '10px' }}
+                      style={{ height: '6px', borderRadius: '10px' }}
                     >
                       <motion.div
                         className="progress-bar"
@@ -165,7 +173,7 @@ export default function SocialLoginModal({ provider, darkMode, onClose, onSucces
                     </div>
                   </div>
 
-                  <small className={`${darkMode ? 'text-light' : 'text-muted'}`}>
+                  <small className={`${darkMode ? 'text-light' : 'text-muted'}`} style={{fontSize: '12px'}}>
                     {progress < 50 ? 'Redirecting...' : 
                      progress < 80 ? 'Authenticating...' : 
                      'Almost done...'}

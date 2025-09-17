@@ -1,0 +1,1384 @@
+/* NOTE: main-content margin is controlled by MainLayout inline styles.
+   Commented out to avoid conflicting rules. Use MainLayout.jsx to set margin-left.
+
+ .app-container .main-content {
+   margin-left: 260px;
+   transition: margin-left 0.3s ease;
+   padding: 20px;
+   box-sizing: border-box;
+ }
+
+ .app-container .sidebar.collapsed ~ .main-content {
+   margin-left: 60px;
+ }
+*/
+
+/* Center auth pages (login/signup) */
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  background: var(--auth-bg, #fff);
+}
+/* Sidebar collapse/expand button styles */
+.sidebar-header .btn.ghost {
+  background: none;
+  border: none;
+  color: var(--sidebar-toggle-color, #444);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.sidebar-header .btn.ghost:hover {
+  background: var(--sidebar-toggle-hover-bg, #eaeaea);
+  color: var(--sidebar-toggle-hover-color, #222);
+}
+.sidebar[data-theme="light"] .sidebar-header .btn.ghost {
+  color: #444;
+}
+.sidebar[data-theme="light"] .sidebar-header .btn.ghost:hover {
+  background: #eaeaea;
+  color: #222;
+}
+.sidebar[data-theme="dark"] .sidebar-header .btn.ghost {
+  color: #eee;
+}
+.sidebar[data-theme="dark"] .sidebar-header .btn.ghost:hover {
+  background: #222;
+  color: #fff;
+}
+/* Library button - integrated style */
+.sidebar-btn.library-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+  padding: 8px 12px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--btn-bg, transparent);
+  color: var(--btn-text, inherit);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  width: 100%;
+}
+
+.sidebar-btn.library-btn:hover {
+  background-color: var(--btn-hover-bg, rgba(0,0,0,0.05));
+}
+
+/* Collapsed sidebar - only show button as small pill */
+.sidebar.collapsed .sidebar-btn.library-btn {
+  justify-content: center;
+  font-size: 0; /* hide text */
+  width: 40px;
+  padding: 8px 0;
+}
+
+/* Tooltip for collapsed sidebar */
+.sidebar.collapsed .sidebar-btn.library-btn:hover::after {
+  content: 'Library';
+  position: absolute;
+  left: 60px;
+  background: var(--tooltip-bg, #333);
+  color: var(--tooltip-text, #fff);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 100;
+}
+/* Enhanced Sidebar Styles with Responsive Design */
+
+.sidebar {
+  width: var(--sidebar-width);
+  max-width: var(--sidebar-width); /* Prevent expansion beyond intended width */
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, width 0.3s ease;
+  overflow: hidden;
+  /* Safe area support for mobile */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Mobile-specific sidebar behavior - Higher specificity to override base rules */
+.sidebar.sidebar.mobile {
+  width: 280px !important;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  z-index: 1000 !important;
+  position: fixed !important;
+  left: 0 !important;
+  top: 0 !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  transform: translateX(0) !important;
+}
+
+.sidebar.sidebar.mobile.collapsed {
+  transform: translateX(-100%) !important;
+  width: 280px !important;
+}
+
+/* Ensure mobile sidebar is visible when not collapsed */
+.sidebar.sidebar.mobile:not(.collapsed) {
+  transform: translateX(0) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Override the general collapsed rule for mobile */
+.sidebar.sidebar.mobile.collapsed {
+  width: 280px !important;
+}
+
+/* Additional CSS for very small mobile screens */
+@media screen and (max-width: 768px) {
+  .sidebar.mobile {
+    width: 280px !important;
+    max-width: 80vw !important;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    height: 100vh !important;
+    z-index: 1000 !important;
+  }
+  
+  .sidebar.mobile.collapsed {
+    transform: translateX(-100%) !important;
+  }
+  
+  .sidebar.mobile:not(.collapsed) {
+    transform: translateX(0) !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .sidebar.mobile {
+    width: 260px !important;
+    max-width: 85vw !important;
+  }
+}
+
+/* Force mobile behavior on touch devices */
+@media (pointer: coarse) {
+  .sidebar.mobile {
+    width: 280px !important;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    height: 100vh !important;
+    z-index: 1000 !important;
+    transition: transform 0.3s ease !important;
+  }
+  
+  .sidebar.mobile.collapsed {
+    transform: translateX(-100%) !important;
+  }
+  
+  .sidebar.mobile:not(.collapsed) {
+    transform: translateX(0) !important;
+  }
+}
+
+/* Desktop collapsed state */
+.sidebar.collapsed:not(.mobile) {
+  width: 60px;
+  max-width: 60px; /* Prevent expansion */
+}
+
+/* Desktop expanded state - ensure proper width constraint */
+@media (min-width: 769px) {
+  .sidebar:not(.mobile):not(.collapsed) {
+    width: var(--sidebar-width) !important;
+    max-width: var(--sidebar-width) !important;
+  }
+  
+  .sidebar:not(.mobile).collapsed {
+    width: 60px !important;
+    max-width: 60px !important;
+  }
+}
+
+/* Remove the ::before overlay since we're using a separate element */
+/* .sidebar.mobile:not(.collapsed)::before { ... } - removed */
+
+/* Responsive breakpoints */
+@media (max-width: 768px) {
+  .sidebar {
+    --sidebar-width: 280px;
+  }
+  
+  /* Ensure mobile sidebar has proper width constraints */
+  .sidebar.mobile {
+    width: 280px !important;
+    max-width: 280px !important;
+  }
+  
+  .sidebar.mobile.collapsed {
+    width: 280px !important;
+    max-width: 280px !important;
+    transform: translateX(-100%) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    --sidebar-width: 260px;
+  }
+  
+  .sidebar.mobile {
+    width: 260px !important;
+    max-width: 260px !important;
+  }
+  
+  .sidebar.mobile.collapsed {
+    width: 260px !important;
+    max-width: 260px !important;
+  }
+  
+  .sidebar.mobile:not(.collapsed)::before {
+    background: rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Improved sidebar content scrolling */
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-4);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Better mobile touch scrolling */
+@media (max-width: 768px) {
+  .sidebar-content {
+    padding: var(--space-3);
+  }
+}
+
+/* Responsive sidebar header */
+.sidebar-header {
+  flex-shrink: 0;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--sidebar-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 60px;
+}
+
+@media (max-width: 768px) {
+  .sidebar-header {
+    padding: var(--space-3);
+    min-height: 56px;
+  }
+}
+
+/* Responsive user profile section */
+.user-profile {
+  flex-shrink: 0;
+  padding: var(--space-4);
+  border-top: 1px solid var(--sidebar-border);
+  /* Safe area support for mobile */
+  padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
+}
+
+@media (max-width: 768px) {
+  .user-profile {
+    padding: var(--space-3);
+    padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
+  }
+}
+
+/* Responsive chat list */
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chat-item {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3) var(--space-2);
+  margin: var(--space-1) 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  min-height: 44px; /* Better touch targets */
+}
+
+@media (max-width: 768px) {
+  .chat-item {
+    min-height: 48px; /* Larger touch targets on mobile */
+    padding: var(--space-3);
+  }
+}
+
+/* Responsive buttons */
+.sidebar-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--sidebar-text);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  width: 100%;
+  min-height: 44px;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .sidebar-btn {
+    min-height: 48px;
+    padding: var(--space-3);
+    font-size: 15px; /* Slightly larger text on mobile */
+  }
+}
+
+.sidebar-btn:hover {
+  background: var(--sidebar-hover);
+}
+
+/* Collapsed sidebar adjustments */
+.sidebar.collapsed:not(.mobile) .sidebar-btn {
+  justify-content: center;
+  padding: var(--space-3) var(--space-2);
+}
+
+.sidebar.collapsed:not(.mobile) .sidebar-btn span {
+  display: none;
+}
+
+/* New chat button responsive styling */
+.new-chat-btn {
+  background: var(--sidebar-new-chat-bg);
+  color: var(--sidebar-new-chat-text);
+  font-weight: 600;
+  margin-bottom: var(--space-4);
+}
+
+.new-chat-btn:hover {
+  background: var(--sidebar-new-chat-hover);
+}
+
+@media (max-width: 768px) {
+  .new-chat-btn {
+    margin-bottom: var(--space-3);
+  }
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Prevent sidebar from affecting main content on mobile */
+  .sidebar.mobile ~ .main-content {
+    margin-left: 0 !important;
+  }
+  
+  .main-content.mobile {
+    margin-left: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden;
+  }
+  
+  /* Ensure sidebar is above all content on mobile */
+  .sidebar.mobile {
+    z-index: 1001;
+  }
+  
+  /* Better touch feedback */
+  .sidebar.mobile .chat-item:active,
+  .sidebar.mobile .sidebar-btn:active {
+    background: var(--sidebar-hover);
+    transform: scale(0.98);
+  }
+}
+
+/* Sidebar Container */
+.sidebar {
+  transition: width 0.3s ease, transform 0.3s ease;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  overflow: hidden; /* prevent double scrollbars */
+  flex-shrink: 0; /* Prevent flexbox from shrinking the sidebar */
+  flex-grow: 0;   /* Prevent flexbox from growing the sidebar */
+}
+
+.sidebar.collapsed {
+  width: 60px !important;
+}
+
+/* Unified collapsed mode centering */
+.sidebar.collapsed .sidebar-content,
+.sidebar.collapsed .sidebar-actions,
+.sidebar.collapsed .sidebar-nav,
+.sidebar.collapsed .user-profile {
+  align-items: center;
+}
+
+.sidebar.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--sidebar-text);
+}
+
+.user-email {
+  font-size: 12px;
+  color: var(--sidebar-muted-text);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar.collapsed .sidebar-content {
+  padding: 0 var(--space-1) var(--space-3);
+  gap: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Remove extra left/right padding for inner groups */
+.sidebar.collapsed .sidebar-actions,
+.sidebar.collapsed .sidebar-nav {
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Normalize vertical spacing */
+.sidebar.collapsed .sidebar-actions > *,
+.sidebar.collapsed .sidebar-nav-collapsed > *,
+.sidebar.collapsed .chat-items.collapsed > *,
+.sidebar.collapsed .user-profile {
+  margin-top: 0;
+  margin-bottom: var(--space-2);
+}
+
+.sidebar.collapsed .sidebar-actions > *:last-child,
+.sidebar.collapsed .sidebar-nav-collapsed > *:last-child {
+  margin-bottom: var(--space-3);
+}
+
+/* Hide textual labels in collapsed mode */
+.sidebar.collapsed .sidebar-title,
+.sidebar.collapsed .search-chats-btn span,
+.sidebar.collapsed .new-chat-btn span,
+.sidebar.collapsed .sidebar-nav-item span,
+.sidebar.collapsed .chat-title,
+.sidebar.collapsed .user-name,
+.sidebar.collapsed .chevron {
+  display: none !important;
+}
+
+/* Ensure circular new chat button stays centered */
+.sidebar.collapsed .new-chat-btn {
+  margin: 0 auto var(--space-2);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensure all buttons in collapsed mode are properly centered */
+.sidebar.collapsed .sidebar-actions {
+  margin-bottom: var(--space-3);
+}
+
+.sidebar.collapsed .sidebar-nav-collapsed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+/* Profile at bottom; no extra horizontal padding */
+.sidebar.collapsed .user-profile {
+  width: 100%;
+  padding: var(--space-2) 0 var(--space-2);
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--sidebar-border);
+}
+
+.sidebar.collapsed .user-profile-button {
+  padding: 0;
+  width: 44px;
+  height: 44px;
+}
+
+/* Scrollable content wrapper */
+/* Scrollable middle area (between header and profile) */
+.sidebar-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--space-3);
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-border) transparent;
+}
+
+/* Variant when entire sidebar (including header & profile) is scrollable */
+/* full-scroll variant no longer used (header & profile fixed) */
+
+/* remove sticky header styling since header sits outside scroll area */
+
+/* user-profile now outside scroll container at bottom */
+
+.sidebar-content::-webkit-scrollbar { width: 8px; }
+.sidebar-content::-webkit-scrollbar-track { background: transparent; }
+.sidebar-content::-webkit-scrollbar-thumb { background: var(--sidebar-border); border-radius: 4px; }
+.sidebar-content::-webkit-scrollbar-thumb:hover { background: var(--sidebar-hover); }
+
+/* Sidebar Header */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+  padding: var(--space-4);
+  min-height: 60px;
+}
+
+.sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  padding: var(--space-2) var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.expand-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--sidebar-muted-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+.expand-btn:hover {
+  background-color: var(--sidebar-hover);
+  color: var(--sidebar-text);
+}
+
+.sidebar-logo {
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 0 5px rgba(79, 108, 222, 0.5));
+  flex-shrink: 0;
+}
+
+.sidebar.collapsed .sidebar-logo {
+  width: 24px;
+  height: 24px;
+}
+
+.sidebar-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--sidebar-text);
+  flex-grow: 1;
+}
+
+.sidebar.collapsed .sidebar-title {
+  display: none;
+}
+
+/* Sidebar Actions */
+
+.sidebar-actions,
+.sidebar-nav,
+.chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.sidebar-actions.collapsed {
+  text-align: center;
+  padding: 0 var(--space-1);
+  align-items: center;
+  margin-bottom: var(--space-3);
+  display: flex;
+  flex-direction: column;
+}
+
+.new-chat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: var(--sidebar-new-chat-bg);
+  color: var(--sidebar-new-chat-text);
+  border: none;
+  border-radius: 999px;
+  padding: var(--space-3);
+  cursor: pointer;
+  transition: all var(--transition);
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.new-chat-btn:hover {
+  background: var(--sidebar-new-chat-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.new-chat-btn.icon-only {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  margin: 0 auto;
+  border-radius: 50%;
+}
+
+/* Explicit collapsed circular style (no pill spacing) */
+.new-chat-btn.collapsed-circle {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-2);
+  font-size: 0; /* hide accidental text spacing */
+}
+
+.sidebar.collapsed .sidebar-actions {
+  gap: var(--space-2);
+}
+
+.search-chats-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: var(--sidebar-button);
+  color: var(--sidebar-text);
+  border: 1px solid var(--sidebar-border);
+  border-radius: 999px;
+  padding: var(--space-3);
+  cursor: pointer;
+  transition: all var(--transition);
+  font-weight: 500;
+}
+
+.search-chats-btn:hover {
+  background: var(--sidebar-hover);
+  border-color: var(--sidebar-text);
+}
+
+/* Sidebar Navigation */
+.sidebar-nav {
+  padding: 0 var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.sidebar-nav.collapsed {
+  text-align: center;
+  padding: 0 var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.sidebar-nav-label {
+  padding: var(--space-2) var(--space-3);
+  color: var(--sidebar-muted-text);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin: 0 0 var(--space-2);
+}
+
+.sidebar-nav-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sidebar-nav-collapsed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sidebar-nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--sidebar-text);
+  cursor: pointer;
+  transition: background-color var(--transition);
+  text-align: left;
+  font-size: 14px;
+}
+
+.sidebar-nav-item:hover {
+  background-color: var(--sidebar-hover);
+}
+
+.sidebar-nav-icon-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--sidebar-muted-text);
+  cursor: pointer;
+  transition: all var(--transition);
+  margin: 0 auto var(--space-1); /* center inside collapsed column with small bottom margin */
+}
+
+.sidebar-nav-icon-btn:hover {
+  background-color: var(--sidebar-hover);
+  color: var(--sidebar-text);
+}
+
+/* Chat List */
+.chat-list {
+  /* Removed flex:1 and internal overflow to allow unified outer scroll */
+  padding: 0 var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.chat-list.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  color: var(--sidebar-muted-text);
+}
+
+.chat-list.empty .empty-message {
+  color: var(--sidebar-muted-text);
+  font-size: 14px;
+}
+
+.chat-list-header {
+  padding: var(--space-2) var(--space-3);
+  color: var(--sidebar-muted-text);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin: 0 0 var(--space-2);
+}
+
+.chat-items.collapsed {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chat-item {
+  padding: var(--space-3) var(--space-4);
+  border-radius: 10px;
+  color: var(--sidebar-muted-text);
+  cursor: pointer;
+  transition: all var(--transition);
+  margin-bottom: var(--space-2);
+  display: flex;
+  align-items: center;
+}
+
+/* Chat item with actions */
+.chat-item.with-actions {
+  padding: 0;
+  background: transparent;
+  position: relative;
+}
+
+.chat-item.with-actions .chat-main-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  color: var(--sidebar-text);
+  cursor: pointer;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  transition: all var(--transition);
+}
+
+.chat-item.with-actions.active .chat-main-btn {
+  background-color: var(--sidebar-new-chat-bg);
+  color: var(--sidebar-new-chat-text);
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.chat-item.with-actions:not(.active) .chat-main-btn:hover {
+  background-color: var(--sidebar-hover);
+  color: var(--sidebar-text);
+}
+
+.chat-item.with-actions .chat-actions {
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 6px;
+  transition: opacity 0.15s ease;
+}
+
+.chat-item.with-actions:hover .chat-actions,
+.chat-item.with-actions:focus-within .chat-actions {
+  opacity: 1;
+}
+
+/* Keep actions visible when menu is open */
+.chat-item.with-actions.menu-open .chat-actions {
+  opacity: 1;
+}
+
+/* Prevent underlying chats from shifting when menu appears */
+.chat-item.with-actions .chat-item-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 4px;
+}
+
+.chat-item.with-actions.menu-open { position: relative; z-index: 25; }
+
+.chat-action-btn {
+  background: transparent;
+  border: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sidebar-muted-text);
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.chat-action-btn:hover {
+  background-color: var(--sidebar-hover);
+  color: var(--sidebar-text);
+}
+
+/* Chat item context menu */
+.chat-item-menu {
+  position: absolute;
+  top: 100%;
+  right: 4px;
+  background: var(--sidebar-surface);
+  border: 1px solid var(--sidebar-border);
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 20;
+}
+
+.chat-item-menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--sidebar-text);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.chat-item-menu-btn:hover {
+  background: var(--sidebar-hover);
+}
+
+.chat-item-menu-btn.danger {
+  color: #dc3545;
+}
+
+.chat-item-menu-btn.danger:hover {
+  background: rgba(220,53,69,0.1);
+}
+
+.chat-item.collapsed {
+  padding: var(--space-2);
+  width: 42px;
+  height: 42px;
+  justify-content: center;
+  margin: 0 auto var(--space-2);
+}
+
+.chat-item:hover {
+  background-color: var(--sidebar-hover);
+  transform: translateY(-1px);
+}
+
+.chat-item.active {
+  background-color: var(--sidebar-new-chat-bg);
+  color: var(--sidebar-new-chat-text);
+  box-shadow: 0 2px 8px rgba(96, 165, 250, 0.3);
+  border-radius: 10px;
+}
+
+.chat-title {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.chat-icon {
+  flex-shrink: 0;
+}
+
+/* User Profile */
+.user-profile {
+  position: relative;
+  border-top: 1px solid var(--sidebar-border);
+  padding: var(--space-3);
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+}
+
+/* Ensure profile anchors bottom in normal (expanded) mode */
+.sidebar > .user-profile { 
+  margin-top: auto; 
+}
+
+.sidebar.collapsed .user-profile {
+  text-align: center;
+  padding: var(--space-3) var(--space-2);
+}
+
+.user-profile-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--sidebar-text);
+  cursor: pointer;
+  transition: background-color var(--transition);
+  text-align: left;
+}
+
+.user-profile-button:hover {
+  background-color: var(--sidebar-hover);
+}
+
+.user-profile-button.collapsed {
+  width: 44px;
+  height: 44px;
+  justify-content: center;
+  margin: 0 auto;
+  border-radius: 50%;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--sidebar-new-chat-bg);
+  color: var(--sidebar-new-chat-text);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar.collapsed .user-avatar {
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--sidebar-text);
+}
+
+.chevron {
+  transition: transform var(--transition);
+  flex-shrink: 0;
+}
+
+.chevron.rotated {
+  transform: rotate(180deg);
+}
+
+/* User Menu */
+.user-menu {
+  background: var(--sidebar-surface);
+  border: 1px solid var(--sidebar-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  animation: fadeInUp 0.15s ease-out;
+  position: absolute;
+  bottom: 100%;
+  margin: 0.5rem;
+  z-index: 1050;
+  min-width: 240px;
+}
+
+/* When collapsed, ensure menu is not cut off by scroll container */
+.sidebar.collapsed .user-menu {
+  position: fixed;
+  left: 70px; /* slightly right of collapsed bar */
+  bottom: 12px;
+  margin: 0;
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+}
+
+.dark .user-menu {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.user-menu-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--sidebar-border);
+}
+
+.user-menu-header .user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.user-menu-header .user-avatar {
+  width: 36px;
+  height: 36px;
+  font-size: 14px;
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--sidebar-text);
+}
+
+.user-email {
+  font-size: 12px;
+  color: var(--sidebar-muted-text);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-menu-plan {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--sidebar-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.plan-info {
+  flex: 1;
+}
+
+.plan-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sidebar-text);
+}
+
+.plan-description {
+  font-size: 12px;
+  color: var(--sidebar-muted-text);
+  margin-top: 2px;
+}
+
+.upgrade-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 12px;
+  padding: var(--space-1) var(--space-3);
+  white-space: nowrap;
+}
+
+.user-menu-items {
+  padding: var(--space-2);
+}
+
+.user-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--sidebar-text);
+  cursor: pointer;
+  transition: background-color var(--transition);
+  text-align: left;
+  font-size: 14px;
+}
+
+.user-menu-item:hover {
+  background-color: var(--sidebar-hover);
+}
+
+.user-menu-item.danger {
+  color: #dc3545;
+}
+
+.user-menu-item.danger:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.dark .user-menu-item.danger:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.user-menu-divider {
+  height: 1px;
+  background-color: var(--sidebar-border);
+  margin: var(--space-1) 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sidebar-actions.expanded {
+    padding: 0 var(--space-3);
+  }
+  
+  .sidebar-nav.expanded {
+    padding: 0 var(--space-3);
+  }
+  
+  .chat-list {
+    padding: 0;
+  }
+}
+
+/* Archived Section in Sidebar */
+/* Archived section styles removed – archived chats managed in Settings Panel only */
+
+/* ----- Overrides: subtle hover, aligned action buttons ----- */
+/* Reduce the bright blue glow for active chat items and make it subtle */
+.chat-item.active {
+  /* softer, lower-opacity shadow */
+  box-shadow: 0 1px 6px rgba(96, 165, 250, 0.12);
+  transform: none; /* avoid lift effect */
+}
+
+/* Ensure action buttons are vertically centered and hidden until hover */
+.chat-item.with-actions {
+  display: flex;
+  align-items: center;
+}
+
+.chat-item.with-actions .chat-main-btn {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px; /* keep comfortable tap target */
+  /* act as a single interactive unit */
+  user-select: none; /* prevent selecting text inside the button */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  outline: none;
+}
+
+.chat-item.with-actions .chat-actions {
+  opacity: 0;
+  transform: translateY(0);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.chat-item.with-actions:hover .chat-actions,
+.chat-item.with-actions:focus-within .chat-actions,
+.chat-item.with-actions.menu-open .chat-actions {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+/* Slightly larger, evenly sized action buttons for consistent alignment */
+.chat-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.chat-action-btn:hover {
+  transform: translateY(-2px);
+  transition: transform 0.12s ease, background-color 0.12s ease;
+}
+
+/* Ensure the per-item menu (three-dot) doesn't obscure layout when visible */
+.chat-item.with-actions .chat-item-menu {
+  right: 6px;
+}
+
+/* Collapse visual noise in dark mode slightly more */
+.dark .chat-item.active {
+  box-shadow: 0 1px 6px rgba(96, 165, 250, 0.08);
+}
+
+/* Remove background / text color change on active (clicked) chat items.
+   Keep only a subtle shadow to indicate selection so the click doesn't "stick" with a strong color. */
+.chat-item.with-actions.active .chat-main-btn,
+.chat-item.active {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+.chat-item.with-actions.active .chat-main-btn {
+  font-weight: 600; /* still highlight slightly by weight, not color */
+}
+
+/* Ensure the title text remains visible when an item is active */
+.chat-item.with-actions.active .chat-main-btn .chat-title {
+  color: var(--sidebar-text) !important;
+  -webkit-text-fill-color: var(--sidebar-text) !important; /* ensure visibility in browsers that use fill-color */
+}
+
+/* If icons or other text turned dim, ensure they inherit readable color */
+.chat-item.with-actions.active .chat-main-btn svg,
+.chat-item.with-actions.active .chat-main-btn .chat-icon {
+  color: var(--sidebar-text) !important;
+}
+
+/* Stronger guarantees: remove any separate visual states on the inner button
+   so the parent `.chat-item.with-actions` is the single source of visual state. */
+.chat-item.with-actions .chat-main-btn,
+.chat-item.with-actions .chat-main-btn:hover,
+.chat-item.with-actions .chat-main-btn:active,
+.chat-item.with-actions .chat-main-btn:focus {
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Keep hover effect only at the .chat-item level */
+.chat-item.with-actions:hover {
+  background-color: var(--sidebar-hover);
+}
+
+/* Ensure focus-visible ring appears on the parent item for keyboard users */
+.chat-item.with-actions:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(96,165,250,0.08);
+  border-radius: 10px;
+}

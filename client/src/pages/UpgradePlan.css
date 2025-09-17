@@ -1,0 +1,451 @@
+/* Upgrade Plan - Modern Design */
+.upgrade-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 4000;
+  padding: 20px;
+}
+
+.upgrade-container {
+  width: 100%;
+  max-width: 900px;
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+/* Remove hardcoded light/dark mode styles - use theme variables instead */
+
+/* Header */
+.upgrade-header {
+  padding: 32px;
+  background: var(--accent);
+  color: var(--accent-on);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: relative;
+  overflow: hidden;
+}
+
+.upgrade-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+}
+
+.header-content {
+  flex: 1;
+}
+
+.upgrade-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: var(--accent-on);
+  letter-spacing: -0.5px;
+}
+
+.upgrade-subtitle {
+  font-size: 16px;
+  margin: 0;
+  color: var(--accent-on);
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+.close-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-on);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.close-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+/* Body */
+.upgrade-body {
+  padding: 40px 32px 32px 32px;
+}
+
+.plans-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* Plan Cards */
+.plan-card {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  position: relative;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.plan-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* Free Plan */
+.plan-card.free-plan {
+  position: relative;
+}
+
+/* Pro Plan */
+.plan-card.pro-plan {
+  background: var(--accent);
+  border: 2px solid var(--accent);
+  color: var(--accent-on);
+  position: relative;
+  overflow: hidden;
+  transform: scale(1.02);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.plan-card.pro-plan::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(25%, -25%);
+}
+
+.popular-badge {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--accent-warning, #FFD700) 0%, var(--accent-warning-hover, #FFA500) 100%);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Plan Header */
+.plan-header {
+  margin-bottom: 24px;
+}
+
+.plan-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-card.pro-plan .plan-title {
+  color: var(--accent-on);
+}
+
+.plan-icon {
+  color: var(--accent-warning, #FFD700);
+  font-size: 20px;
+}
+
+.plan-description {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+  opacity: 0.8;
+}
+
+.plan-card.pro-plan .plan-description {
+  color: var(--accent-on);
+  opacity: 0.9;
+}
+
+/* Features */
+.plan-features {
+  flex: 1;
+  margin-bottom: 24px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.plan-card.pro-plan .feature-item {
+  color: var(--accent-on);
+}
+
+.feature-icon {
+  flex-shrink: 0;
+  color: var(--accent);
+  background: var(--surface-hover);
+  border-radius: 50%;
+  padding: 3px;
+  font-size: 12px;
+}
+
+.plan-card.pro-plan .feature-icon {
+  color: var(--accent-on);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Plan Footer */
+.plan-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.price-amount {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+}
+
+.plan-card.pro-plan .price-amount {
+  color: var(--accent-on);
+}
+
+.price-period {
+  font-size: 16px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.plan-card.pro-plan .price-period {
+  color: var(--accent-on);
+  opacity: 0.8;
+}
+
+/* Buttons */
+.plan-button {
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.current-plan {
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  border: 2px solid var(--border);
+  cursor: not-allowed;
+  font-weight: 500;
+}
+
+.upgrade-button {
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.upgrade-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.upgrade-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  background: var(--accent);
+  color: var(--accent-on);
+  border-color: var(--accent);
+}
+
+.upgrade-button:hover::before {
+  left: 100%;
+}
+
+.upgrade-button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Footer */
+.upgrade-footer {
+  text-align: center;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.footer-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0;
+  opacity: 0.8;
+}
+
+/* Remove hardcoded color overrides - let theme variables handle everything */
+@media (max-width: 768px) {
+  .upgrade-overlay {
+    padding: 0;
+    align-items: flex-start;
+  }
+  
+  .upgrade-container {
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+    max-height: none;
+    overflow-y: auto;
+  }
+  
+  .upgrade-header {
+    padding: 20px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .upgrade-title {
+    font-size: 22px;
+  }
+  
+  .upgrade-subtitle {
+    font-size: 14px;
+  }
+  
+  .upgrade-body {
+    padding: 20px 16px 80px 16px;
+  }
+  
+  .plans-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .plan-card {
+    padding: 20px;
+    border-radius: 12px;
+  }
+  
+  .plan-title {
+    font-size: 18px;
+  }
+  
+  .price-amount {
+    font-size: 24px;
+  }
+  
+  .popular-badge {
+    top: -8px;
+    padding: 4px 10px;
+    font-size: 10px;
+  }
+  
+  .feature-item {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+  
+  .plan-button {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .upgrade-header {
+    padding: 16px 12px;
+  }
+  
+  .upgrade-title {
+    font-size: 20px;
+  }
+  
+  .upgrade-body {
+    padding: 16px 12px 60px 12px;
+  }
+  
+  .plan-card {
+    padding: 16px;
+  }
+  
+  .plan-title {
+    font-size: 16px;
+  }
+  
+  .price-amount {
+    font-size: 20px;
+  }
+  
+  .feature-item {
+    font-size: 12px;
+  }
+  
+  .close-button {
+    width: 36px;
+    height: 36px;
+  }
+}

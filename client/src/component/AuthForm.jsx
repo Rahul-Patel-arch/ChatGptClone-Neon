@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import emailjs from '@emailjs/browser';
+import axios from 'axios';
+import { PublicClientApplication } from '@azure/msal-browser';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sun, Moon, Eye, EyeOff } from 'lucide-react';
-import gptIcon from '../assets/gpt-clone-icon.png';
+import gptIcon from '../assets/quantum-chat-icon.png';
 import SocialLoginModal from './SocialLoginModal';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
   const [isLoginView, setIsLoginView] = useState(true);
+  const [showForgot, setShowForgot] = useState(false);
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -21,6 +26,94 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
   // Form validation states
   const [emailValid, setEmailValid] = useState(null);
   const [usernameValid, setUsernameValid] = useState(null);
+
+  // Helper to send welcome email (best-effort). Uses EmailJS if env is configured.
+  const sendWelcomeEmail = async (user, isNewUser = true) => {
+    try {
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      
+      console.log('EmailJS config check:', {
+        serviceId: serviceId ? 'OK' : 'MISSING',
+        templateId: templateId ? 'OK' : 'MISSING',
+        publicKey: publicKey ? 'OK' : 'MISSING'
+      });
+      
+      if (!serviceId || !publicKey) {
+        console.warn('EmailJS service or public key not configured; skipping.');
+        return false;
+      }
+      
+      const username = user.username || user.name || (user.email || '').split('@')[0];
+      
+      // Try primary welcome template first
+      if (templateId) {
+        try {
+          // Use simple parameters that match the forgot password template
+          const templateParams = {
+            username: username,
+            to_email: user.email,
+            reset_token: isNewUser ? 'WELCOME_NEW_USER' : 'WELCOME_BACK',
+            reset_link: window.location.origin
+          };
+          
+          console.log('Sending welcome email with template:', templateParams);
+          
+          const res = await emailjs.send(serviceId, templateId, templateParams, publicKey);
+          console.log(`${isNewUser ? 'Welcome' : 'Login'} email sent successfully:`, res.status, res.text || 'ok');
+          return true;
+        } catch (primaryErr) {
+          console.warn('Primary welcome template failed, trying fallback:', primaryErr);
+          
+          // Fallback to forgot password template with simpler params
+          const fallbackTemplateId = import.meta.env.VITE_EMAILJS_FORGOT_PASSWORD_TEMPLATE_ID;
+          if (fallbackTemplateId) {
+            try {
+              const fallbackParams = {
+                to_email: user.email,
+                username: username,
+                reset_token: 'WELCOME',
+                reset_link: window.location.origin
+              };
+              
+              console.log('Sending welcome email with fallback template:', fallbackParams);
+              
+              const fallbackRes = await emailjs.send(serviceId, fallbackTemplateId, fallbackParams, publicKey);
+              console.log('Welcome email sent with fallback template:', fallbackRes.status);
+              return true;
+            } catch (fallbackErr) {
+              console.error('Fallback template also failed:', fallbackErr);
+            }
+          }
+        }
+      }
+      
+      console.warn('No suitable email template found for welcome email');
+      return false;
+      
+    } catch (err) {
+      console.error(`Failed to send ${isNewUser ? 'welcome' : 'login'} email:`, err);
+      console.error('Error details:', {
+        message: err.message,
+        status: err.status,
+        text: err.text
+      });
+      return false;
+    }
+  };
+  
+  // track welcome-email status for UI feedback
+  const [welcomeEmailStatus, setWelcomeEmailStatus] = useState(null);
+
+  // Debug: log whether EmailJS env variables are present at runtime (masked)
+  useEffect(() => {
+    const sid = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const tid = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const pk = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+    console.info('EmailJS config - service:', sid ? 'OK' : 'MISSING', 'template:', tid ? 'OK' : 'MISSING', 'publicKey:', pk ? 'OK' : 'MISSING');
+    // For safety don't print raw keys in console in production.
+  }, []);
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -106,6 +199,16 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
     users.push(newUser);
     localStorage.setItem('chatapp_users', JSON.stringify(users));
 
+      // Send welcome email for new signup
+      try {
+        setWelcomeEmailStatus('sending');
+        const emailSent = await sendWelcomeEmail(newUser, true);
+        setWelcomeEmailStatus(emailSent ? 'sent' : 'failed');
+      } catch (e) {
+        console.error('sendWelcomeEmail error', e);
+        setWelcomeEmailStatus('failed');
+      }
+
     setSuccess('🎉 Account created successfully! Redirecting to login...');
     setEmail('');
     setUsername('');
@@ -169,6 +272,13 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
         localStorage.removeItem('chatapp_remember_user');
       }
       
+      // Send login notification email (best-effort)
+      try {
+        await sendWelcomeEmail(foundUser, false);
+      } catch (e) {
+        console.log('Login email notification failed (non-critical):', e);
+      }
+      
       setSuccess('✅ Login successful! Welcome back!');
       setTimeout(() => {
         onLogin({
@@ -177,7 +287,7 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
           id: foundUser.id,
           preferences: foundUser.preferences || {},
           lastLogin: foundUser.lastLogin
-        });
+        }, rememberMe);
       }, 1500);
     } else {
       setError('❌ Invalid email or password. Please check your credentials.');
@@ -186,52 +296,94 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
     setIsLoading(false);
   };
 
-  const handleSocialLogin = (provider) => {
-    setActiveProvider(provider);
-    setIsModalOpen(true);
-    setError('');
-    setSuccess('');
+  // Alternative Google login for COOP issues
+  const handleGoogleLoginAlternative = () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '154897483545-bn7qpad3h8n2bsmouhug6ibnvs4pjluo.apps.googleusercontent.com';
+    // Use current origin, but handle both localhost and production domains
+    const currentOrigin = window.location.origin;
+    const redirectUri = encodeURIComponent(currentOrigin);
+    const scope = encodeURIComponent('openid email profile');
+    const responseType = 'token';
+    
+    const googleAuthUrl = `https://accounts.google.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=${responseType}&include_granted_scopes=true`;
+    
+    // Set a flag to indicate we're doing OAuth redirect
+    sessionStorage.setItem('oauth_in_progress', 'google');
+    
+    // Redirect to Google OAuth
+    window.location.href = googleAuthUrl;
   };
 
-  const handleSocialLoginSuccess = (provider) => {
-    setIsModalOpen(false);
-    setSuccess(`🎉 Successfully authenticated with ${provider}!`);
-    
-    // Create or update social login user
-    const socialUser = {
-      id: Date.now(),
-      email: `user@${provider.toLowerCase()}.com`,
-      username: `${provider} User`,
-      provider: provider,
-      createdAt: new Date().toISOString(),
-      lastLogin: new Date().toISOString(),
-      isActive: true,
-      preferences: {
-        theme: 'system',
-        language: 'en',
-        notifications: true
-      }
-    };
-
-    // Store social user info
-    const users = JSON.parse(localStorage.getItem('chatapp_users')) || [];
-    const existingSocialUser = users.find(user => user.provider === provider);
-    
-    if (!existingSocialUser) {
-      users.push(socialUser);
-      localStorage.setItem('chatapp_users', JSON.stringify(users));
+  const handleSocialLogin = (provider) => {
+    if (provider === 'Google') {
+      // Use redirect flow only to avoid COOP issues completely
+      handleGoogleLoginAlternative();
+    } else {
+      setActiveProvider(provider);
+      setIsModalOpen(true);
+      setError('');
+      setSuccess('');
     }
-    
-    setTimeout(() => {
-      onLogin({
-        email: socialUser.email,
-        name: socialUser.username,
-        id: socialUser.id,
-        provider: provider,
-        preferences: socialUser.preferences,
-        lastLogin: socialUser.lastLogin
-      });
-    }, 1500);
+  };
+
+  // Google OAuth redirect flow (NO popup to avoid COOP completely)
+  const loginWithGoogle = () => {
+    // Redirect immediately instead of using popup
+    handleGoogleLoginAlternative();
+  };
+
+  // Microsoft OAuth (msal-browser) - popup flow
+  const handleMicrosoftLogin = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      setSuccess('Authenticating with Microsoft...');
+      const msClientId = import.meta.env.VITE_MICROSOFT_CLIENT_ID;
+      if (!msClientId) {
+        setError('Microsoft OAuth client id is not configured. Set VITE_MICROSOFT_CLIENT_ID in your .env');
+        setIsLoading(false);
+        return;
+      }
+      const pca = new PublicClientApplication({ auth: { clientId: msClientId, redirectUri: window.location.origin } });
+      const loginResponse = await pca.loginPopup({ scopes: ['User.Read'] });
+      let accessToken = loginResponse.accessToken;
+      if (!accessToken) {
+        const tokenResp = await pca.acquireTokenSilent({ account: loginResponse.account, scopes: ['User.Read'] });
+        accessToken = tokenResp.accessToken;
+      }
+      const graphRes = await axios.get('https://graph.microsoft.com/v1.0/me', { headers: { Authorization: `Bearer ${accessToken}` } });
+      const profile = graphRes.data;
+
+      const users = JSON.parse(localStorage.getItem('chatapp_users')) || [];
+      let existingUser = users.find(u => u.email === (profile.mail || profile.userPrincipalName));
+      let userToLogin;
+      if (!existingUser) {
+        const newUser = {
+          id: profile.id || Date.now(),
+          email: profile.mail || profile.userPrincipalName,
+          username: profile.displayName || (profile.mail || profile.userPrincipalName).split('@')[0],
+          name: profile.displayName,
+          provider: 'Microsoft',
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
+          isActive: true,
+          preferences: { theme: 'system', language: 'en', notifications: true }
+        };
+        users.push(newUser);
+        localStorage.setItem('chatapp_users', JSON.stringify(users));
+        try { await sendWelcomeEmail(newUser, true); } catch (e) { /* no-op */ }
+        userToLogin = newUser;
+      } else {
+        existingUser.lastLogin = new Date().toISOString();
+        localStorage.setItem('chatapp_users', JSON.stringify(users.map(u => u.id === existingUser.id ? existingUser : u)));
+        userToLogin = existingUser;
+      }
+      setTimeout(() => { onLogin(userToLogin, true); setIsLoading(false); }, 1000);
+    } catch (err) {
+      console.error('Microsoft login error', err);
+      setError('❌ Microsoft login failed. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   const switchView = (view) => {
@@ -261,8 +413,85 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
     return isValid;
   };
 
+  // Handle OAuth callback after redirect
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hash = window.location.hash;
+      const oauthInProgress = sessionStorage.getItem('oauth_in_progress');
+      
+      // Check for Google OAuth token in URL hash (implicit flow)
+      if (hash.includes('access_token') && oauthInProgress === 'google') {
+        try {
+          setIsLoading(true);
+          setSuccess('Processing Google authentication...');
+          
+          // Clear the OAuth flag
+          sessionStorage.removeItem('oauth_in_progress');
+          
+          const hashParams = new URLSearchParams(hash.substring(1));
+          const accessToken = hashParams.get('access_token');
+          
+          if (accessToken) {
+            // Get user info from Google
+            const res = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+              headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            const userProfile = res.data;
+
+            const users = JSON.parse(localStorage.getItem('chatapp_users')) || [];
+            let existingUser = users.find(user => user.email === userProfile.email);
+            let userToLogin;
+
+            if (!existingUser) {
+              setSuccess(`👋 Welcome, ${userProfile.name || userProfile.email}! Creating your account...`);
+              const newUser = {
+                id: userProfile.sub || Date.now(),
+                email: userProfile.email,
+                username: userProfile.name || userProfile.email.split('@')[0],
+                name: userProfile.name,
+                provider: 'Google',
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString(),
+                isActive: true,
+                preferences: { theme: 'system', language: 'en', notifications: true }
+              };
+              users.push(newUser);
+              localStorage.setItem('chatapp_users', JSON.stringify(users));
+              try { await sendWelcomeEmail(newUser, true); } catch (e) { console.warn('Welcome email failed:', e); }
+              userToLogin = newUser;
+            } else {
+              setSuccess(`✅ Welcome back, ${existingUser.name || existingUser.username}!`);
+              existingUser.lastLogin = new Date().toISOString();
+              localStorage.setItem('chatapp_users', JSON.stringify(users.map(u => u.id === existingUser.id ? existingUser : u)));
+              userToLogin = existingUser;
+            }
+            
+            // Clean the URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            setTimeout(() => { 
+              onLogin(userToLogin, true); 
+              setIsLoading(false); 
+            }, 1200);
+          }
+        } catch (err) {
+          console.error('OAuth callback error:', err);
+          setError('❌ Google authentication failed. Please try again.');
+          setSuccess('');
+          setIsLoading(false);
+          // Clean the URL on error too
+          window.history.replaceState({}, document.title, window.location.pathname);
+          sessionStorage.removeItem('oauth_in_progress');
+        }
+      }
+    };
+
+    handleOAuthCallback();
+  }, []);
+
   // Auto-fill remembered user
-  React.useEffect(() => {
+  useEffect(() => {
     const rememberedUser = localStorage.getItem('chatapp_remember_user');
     if (rememberedUser && isLoginView) {
       const user = JSON.parse(rememberedUser);
@@ -292,12 +521,21 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
 
   return (
     <>
-      <div className={`min-vh-100 d-flex align-items-center justify-content-center gradient-bg`}>
-        <div className="container-fluid">
-          <div className="row justify-content-center">
-            {/* Branding Section */}
-            <div className="col-lg-6 d-none d-lg-flex align-items-center justify-content-center">
-              <div className="text-center p-5">
+      {/* OAuth spinner overlay */}
+      {isLoading && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.35)' }}>
+          <div className="p-4 rounded-3 text-center bg-white" style={{ minWidth: 220 }}>
+            <div className="spinner-border text-primary mb-2" role="status" />
+            <div className="fw-semibold">Processing authentication...</div>
+          </div>
+        </div>
+      )}
+      <div className="auth-container">
+        <div className="container-fluid p-0">
+          <div className="row g-0 justify-content-center">
+            {/* App Logo for Mobile - Only visible on mobile */}
+            <div className="col-12 d-flex d-lg-none align-items-center justify-content-center mb-3">
+              <div className="text-center">
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -306,88 +544,68 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                   <img 
                     src={gptIcon} 
                     alt="QuantumChat Logo" 
-                    style={{width: '120px', height: '120px'}} 
-                    className="mb-4"
+                    style={{width: '60px', height: '60px'}} 
+                    className="mb-1"
                   />
-                  <h1 className="display-4 fw-bold mb-3" style={{
-                    color: '#2d3436',
-                    fontWeight: '700'
-                  }}>QuantumChat</h1>
-                  <p className="lead mb-4" style={{
-                    color: '#636e72',
-                    fontWeight: '400'
-                  }}>
-                    Enterprise-grade AI platform delivering intelligent conversational experiences through cutting-edge language models
+                  <h2 className="fw-bold mb-0">QuantumChat</h2>
+                </motion.div>
+              </div>
+            </div>
+            
+            {/* Branding Section - Hidden on mobile */}
+            <div className="col-lg-6 d-none d-lg-flex align-items-center justify-content-center">
+              <div className="text-center p-4">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <img 
+                    src={gptIcon} 
+                    alt="QuantumChat Logo" 
+                    style={{width: '100px', height: '100px'}} 
+                    className="mb-3"
+                  />
+                  <h1 className="display-5 fw-bold mb-2">QuantumChat</h1>
+                  <p className="lead mb-3">
+                    Enterprise-grade AI platform delivering intelligent conversational experiences
                   </p>
-                  <div className="mt-4">
-                    <div className="d-flex flex-column gap-3 text-start">
-                      <div className="d-flex align-items-center gap-3">
-                        <div className="rounded-circle p-2 d-flex align-items-center justify-content-center" style={{
-                          width: '40px', 
-                          height: '40px',
-                          background: 'rgba(183, 177, 242, 0.15)',
-                          border: '1px solid rgba(183, 177, 242, 0.3)'
-                        }}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#6c5ce7">
+                  <div className="mt-3">
+                    <div className="d-flex flex-column gap-2 text-start">
+                      <div className="auth-branding-feature">
+                        <div className="auth-feature-icon">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent)">
                             <path d="M12 2L2 7L12 12L22 7L12 2Z" opacity="0.8"/>
                             <path d="M2 17L12 22L22 17"/>
                             <path d="M2 12L12 17L22 12"/>
                           </svg>
                         </div>
                         <div>
-                          <div className="fw-semibold" style={{
-                            color: '#2d3436',
-                            fontWeight: '600'
-                          }}>Advanced AI Technology</div>
-                          <small style={{
-                            color: '#636e72',
-                            fontWeight: '400'
-                          }}>Next-generation language processing capabilities</small>
+                          <div className="fw-semibold">Advanced AI Technology</div>
+                          <small className="text-muted">Next-generation language processing</small>
                         </div>
                       </div>
-                      <div className="d-flex align-items-center gap-3">
-                        <div className="rounded-circle p-2 d-flex align-items-center justify-content-center" style={{
-                          width: '40px', 
-                          height: '40px',
-                          background: 'rgba(253, 183, 234, 0.15)',
-                          border: '1px solid rgba(253, 183, 234, 0.3)'
-                        }}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#6c5ce7">
+                      <div className="auth-branding-feature">
+                        <div className="auth-feature-icon">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent)">
                             <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z"/>
                           </svg>
                         </div>
                         <div>
-                          <div className="fw-semibold" style={{
-                            color: '#2d3436',
-                            fontWeight: '600'
-                          }}>Intelligent Conversations</div>
-                          <small style={{
-                            color: '#636e72',
-                            fontWeight: '400'
-                          }}>Context-aware dialogue with natural language understanding</small>
+                          <div className="fw-semibold">Intelligent Conversations</div>
+                          <small className="text-muted">Context-aware dialogue with natural language</small>
                         </div>
                       </div>
-                      <div className="d-flex align-items-center gap-3">
-                        <div className="rounded-circle p-2 d-flex align-items-center justify-content-center" style={{
-                          width: '40px', 
-                          height: '40px',
-                          background: 'rgba(255, 220, 204, 0.15)',
-                          border: '1px solid rgba(255, 220, 204, 0.3)'
-                        }}>
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#6c5ce7">
+                      <div className="auth-branding-feature">
+                        <div className="auth-feature-icon">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent)">
                             <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"/>
-                            <path d="M9 12L11 14L15 10" stroke="#6c5ce7" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M9 12L11 14L15 10" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </div>
                         <div>
-                          <div className="fw-semibold" style={{
-                            color: '#2d3436',
-                            fontWeight: '600'
-                          }}>Enterprise Security</div>
-                          <small style={{
-                            color: '#636e72',
-                            fontWeight: '400'
-                          }}>End-to-end encryption with privacy-first architecture</small>
+                          <div className="fw-semibold">Enterprise Security</div>
+                          <small className="text-muted">End-to-end encryption with privacy-first design</small>
                         </div>
                       </div>
                     </div>
@@ -397,71 +615,34 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
             </div>
 
             {/* Form Section */}
-            <div className="col-lg-6 col-md-8 col-sm-10">
+            <div className="col-lg-6 col-md-10 col-sm-12">
               <motion.div
                 initial={{ x: 50, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className={`p-5 shadow-lg rounded-4 ${
-                  darkMode ? 'bg-dark text-white' : 'bg-white'
-                }`}
-                style={{ maxWidth: '500px', margin: '0 auto' }}
+                className="auth-form"
               >
                 {/* Dark Mode Toggle */}
-                <div className="text-end mb-3">
+                <div className="text-end mb-2">
                   <button
                     onClick={toggleDarkMode}
-                    className={`btn btn-sm rounded-3 ${
-                      darkMode ? 'btn-outline-light' : 'btn-outline-primary'
-                    }`}
-                    style={{
-                      border: darkMode ? '1px solid rgba(255, 255, 255, 0.5)' : '1px solid #7c73e6',
-                      color: darkMode ? 'white' : '#7c73e6',
-                      padding: '6px 10px'
-                    }}
+                    className="btn ghost"
+                    aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                   >
                     {darkMode ? <Sun size={16} /> : <Moon size={16} />}
                   </button>
                 </div>
 
                 {/* Auth Tabs */}
-                <div className="d-flex mb-4 rounded-3 p-1" style={{
-                  backgroundColor: darkMode ? '#333' : '#f8f9fa'
-                }}>
+                <div className="auth-tabs">
                   <button
-                    className={`btn flex-fill rounded-3 fw-semibold ${
-                      isLoginView 
-                        ? 'btn-primary text-white' 
-                        : (darkMode ? 'text-white' : 'text-dark')
-                    }`}
-                    style={{
-                      background: isLoginView 
-                        ? (darkMode ? 'var(--primary-color)' : '#7c73e6') 
-                        : (darkMode ? 'var(--bg-secondary)' : '#f5f5f5'),
-                      border: isLoginView ? 'none' : (darkMode ? '1px solid var(--border-color)' : '1px solid #e0e0e0'),
-                      color: isLoginView ? 'white' : (darkMode ? 'var(--text-primary)' : '#555'),
-                      fontWeight: '600',
-                      boxShadow: isLoginView ? (darkMode ? 'none' : '0 2px 4px rgba(124, 115, 230, 0.15)') : 'none'
-                    }}
+                    className={`auth-tab ${isLoginView ? 'active' : ''}`}
                     onClick={() => switchView('login')}
                   >
                     LOG IN
                   </button>
                   <button
-                    className={`btn flex-fill rounded-3 fw-semibold ${
-                      !isLoginView 
-                        ? 'btn-primary text-white' 
-                        : (darkMode ? 'text-white' : 'text-dark')
-                    }`}
-                    style={{
-                      background: !isLoginView 
-                        ? (darkMode ? 'var(--primary-color)' : '#7c73e6') 
-                        : (darkMode ? 'var(--bg-secondary)' : '#f5f5f5'),
-                      border: !isLoginView ? 'none' : (darkMode ? '1px solid var(--border-color)' : '1px solid #e0e0e0'),
-                      color: !isLoginView ? 'white' : (darkMode ? 'var(--text-primary)' : '#555'),
-                      fontWeight: '600',
-                      boxShadow: !isLoginView ? (darkMode ? 'none' : '0 2px 4px rgba(124, 115, 230, 0.15)') : 'none'
-                    }}
+                    className={`auth-tab ${!isLoginView ? 'active' : ''}`}
                     onClick={() => switchView('signup')}
                   >
                     SIGN UP
@@ -475,7 +656,7 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="alert alert-danger rounded-3 mb-3"
+                      className="alert alert-danger rounded-3 mb-2 py-2"
                     >
                       {error}
                     </motion.div>
@@ -485,29 +666,33 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="alert alert-success rounded-3 mb-3"
+                      className="alert alert-success rounded-3 mb-2 py-2"
                     >
                       {success}
                     </motion.div>
+                  )}
+                  {welcomeEmailStatus === 'sending' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="alert alert-info small mb-2">📧 Sending welcome email…</motion.div>
+                  )}
+                  {welcomeEmailStatus === 'sent' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="alert alert-success small mb-2">✅ Welcome email sent — check your inbox!</motion.div>
+                  )}
+                  {welcomeEmailStatus === 'failed' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="alert alert-warning small mb-2">⚠️ Welcome email could not be sent. Please check the console for details.</motion.div>
                   )}
                 </AnimatePresence>
 
                 {/* Auth Form */}
                 <form onSubmit={isLoginView ? handleLogin : handleSignup}>
-                  <div className="mb-3 position-relative">
-                    <label htmlFor="email" className="form-label visually-hidden">Email</label>
+                  <div className="mb-2 position-relative">
+                    <label htmlFor="email" className="form-label small mb-1">Email</label>
                     <input
                       id="email"
                       type="email"
-                      className={`form-control form-control-lg rounded-3 auth-input ${
-                        darkMode ? 'bg-dark text-white border-secondary' : ''
-                      } ${
+                      className={`input ${
                         emailValid === true ? 'is-valid' : 
                         emailValid === false ? 'is-invalid' : ''
                       }`}
-                      style={{
-                        '--bs-form-control-placeholder-color': darkMode ? '#adb5bd' : '#6c757d'
-                      }}
                       placeholder="Enter your email address"
                       value={email}
                       onChange={(e) => {
@@ -518,13 +703,8 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                       required
                     />
                     {emailValid === false && (
-                      <div className="invalid-feedback">
+                      <div className="invalid-feedback small">
                         Please enter a valid email address.
-                      </div>
-                    )}
-                    {emailValid === true && (
-                      <div className="valid-feedback">
-                        Email looks good!
                       </div>
                     )}
                   </div>
@@ -534,21 +714,16 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="mb-3"
+                      className="mb-2"
                     >
-                      <label htmlFor="username" className="form-label visually-hidden">Username</label>
+                      <label htmlFor="username" className="form-label small mb-1">Username</label>
                       <input
                         id="username"
                         type="text"
-                        className={`form-control form-control-lg rounded-3 auth-input ${
-                          darkMode ? 'bg-dark text-white border-secondary' : ''
-                        } ${
+                        className={`input ${
                           usernameValid === true ? 'is-valid' : 
                           usernameValid === false ? 'is-invalid' : ''
                         }`}
-                        style={{
-                          '--bs-form-control-placeholder-color': darkMode ? '#adb5bd' : '#6c757d'
-                        }}
                         placeholder="Choose a unique username"
                         value={username}
                         onChange={(e) => {
@@ -559,67 +734,57 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                         required={!isLoginView}
                       />
                       {usernameValid === false && (
-                        <div className="invalid-feedback">
-                          Username must be at least 3 characters and contain only letters, numbers, and underscores.
-                        </div>
-                      )}
-                      {usernameValid === true && (
-                        <div className="valid-feedback">
-                          Username is available!
+                        <div className="invalid-feedback small">
+                          Username must be at least 3 characters (letters, numbers, underscores).
                         </div>
                       )}
                     </motion.div>
                   )}
 
-                  <div className="mb-3 position-relative">
-                    <label htmlFor="password" className="form-label visually-hidden">Password</label>
-                    <input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      className={`form-control form-control-lg rounded-3 auth-input ${
-                        darkMode ? 'bg-dark text-white border-secondary' : ''
-                      }`}
-                      style={{
-                        '--bs-form-control-placeholder-color': darkMode ? '#adb5bd' : '#6c757d'
-                      }}
-                      placeholder={isLoginView ? "Enter your password" : "Create a secure password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="btn position-absolute top-50 end-0 translate-middle-y me-2"
-                      style={{ border: 'none', background: 'none' }}
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
+                  <div className="mb-2 position-relative">
+                    <label htmlFor="password" className="form-label small mb-1">Password</label>
+                    <div className="position-relative">
+                      <input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        className="input"
+                        placeholder={isLoginView ? "Enter your password" : "Create a secure password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        autoComplete={isLoginView ? "current-password" : "new-password"}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="btn ghost position-absolute top-50 end-0 translate-middle-y"
+                        style={{ padding: '6px' }}
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                     
-                    {/* Password Strength Indicator for Signup */}
+                    {/* Password Strength Indicator for Signup - More compact */}
                     {!isLoginView && password && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="mt-2"
+                        className="mt-1"
                       >
-                        <div className="d-flex justify-content-between align-items-center mb-1">
-                          <small className={darkMode ? 'text-light' : 'text-muted'}>
-                            Password Strength:
+                        <div className="d-flex justify-content-between align-items-center">
+                          <small className="text-muted" style={{fontSize: '11px'}}>
+                            Strength: <span style={{ color: passwordStrength.color }}>{passwordStrength.label}</span>
                           </small>
-                          <small style={{ color: passwordStrength.color, fontWeight: 'bold' }}>
-                            {passwordStrength.label}
-                          </small>
-                        </div>
-                        <div className="progress" style={{ height: '4px' }}>
-                          <div
-                            className="progress-bar"
-                            style={{
-                              width: `${(passwordStrength.score / 6) * 100}%`,
-                              backgroundColor: passwordStrength.color,
-                              transition: 'all 0.3s ease'
-                            }}
-                          />
+                          <div className="progress" style={{ height: '4px', width: '60%' }}>
+                            <div
+                              className="progress-bar"
+                              style={{
+                                width: `${(passwordStrength.score / 6) * 100}%`,
+                                backgroundColor: passwordStrength.color,
+                                transition: 'all 0.3s ease'
+                              }}
+                            />
+                          </div>
                         </div>
                       </motion.div>
                     )}
@@ -636,16 +801,16 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                           checked={rememberMe}
                           onChange={(e) => setRememberMe(e.target.checked)}
                         />
-                        <label className="form-check-label small" htmlFor="rememberMe">
+                        <label className="form-check-label small" htmlFor="rememberMe" style={{fontSize: '12px'}}>
                           Remember Me
                         </label>
                       </div>
-                      <a href="#forgot" className="small text-decoration-none">
+                      <button type="button" className="btn btn-link small text-decoration-none p-0" style={{fontSize: '12px'}} onClick={() => setShowForgot(true)}>
                         Forgot Password?
-                      </a>
+                      </button>
                     </div>
                   ) : (
-                    <div className="mb-3">
+                    <div className="mb-2">
                       <div className="form-check">
                         <input
                           type="checkbox"
@@ -655,7 +820,7 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                           onChange={(e) => setAgreeTerms(e.target.checked)}
                           required
                         />
-                        <label className="form-check-label small" htmlFor="agreeTerms">
+                        <label className="form-check-label" htmlFor="agreeTerms" style={{fontSize: '12px'}}>
                           I agree to the <a href="#terms" className="text-decoration-none">Terms & Conditions</a>
                         </label>
                       </div>
@@ -666,14 +831,7 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
-                    className="btn w-100 py-3 fw-bold rounded-3 mb-3"
-                    style={{
-                      background: darkMode ? 'var(--primary-color)' : '#7c73e6', // Darker in light mode
-                      border: 'none',
-                      color: 'white',
-                      boxShadow: darkMode ? 'var(--shadow-light)' : '0 4px 6px rgba(124, 115, 230, 0.25)',
-                      fontWeight: '600'
-                    }}
+                    className="btn primary w-100 py-2 fw-bold mb-2"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -686,79 +844,53 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
                 </form>
 
                 {/* Divider */}
-                <div className="text-center mb-3">
-                  <span className={`px-3 ${darkMode ? 'text-light' : 'text-muted'}`}
-                    style={{ backgroundColor: darkMode ? '#212529' : 'white' }}>
-                    or
-                  </span>
-                  <hr className="mt-n2" />
+                <div className="text-center mb-2">
+                  <span className="px-3 text-muted small">or</span>
+                  <hr className="mt-n2 mb-2" />
                 </div>
 
                 {/* Social Login */}
-                <div className="d-flex justify-content-center gap-3 mb-4">
+                <div className="d-flex flex-wrap justify-content-center gap-2 mb-3">
                   <button
-                    className={`btn rounded-circle ${
-                      darkMode ? 'btn-outline-light' : 'btn-outline-primary'
-                    }`}
-                    style={{ 
-                      width: '50px', 
-                      height: '50px',
-                      border: darkMode ? '1px solid rgba(255, 255, 255, 0.5)' : '2px solid #6c5ce7',
-                      color: darkMode ? 'white' : '#6c5ce7',
-                      fontWeight: '600',
-                      boxShadow: darkMode ? 'none' : '0 2px 4px rgba(108, 92, 231, 0.15)'
-                    }}
+                    type="button"
+                    className="social-button"
                     onClick={() => handleSocialLogin('Google')}
                     title="Continue with Google"
+                    aria-label="Continue with Google"
                   >
                     G
                   </button>
                   <button
-                    className={`btn rounded-circle ${
-                      darkMode ? 'btn-outline-light' : 'btn-outline-primary'
-                    }`}
-                    style={{ 
-                      width: '50px', 
-                      height: '50px',
-                      border: darkMode ? '1px solid rgba(255, 255, 255, 0.5)' : '2px solid #6c5ce7',
-                      color: darkMode ? 'white' : '#6c5ce7',
-                      fontWeight: '600',
-                      boxShadow: darkMode ? 'none' : '0 2px 4px rgba(108, 92, 231, 0.15)'
-                    }}
-                    onClick={() => handleSocialLogin('Microsoft')}
+                    type="button"
+                    className="social-button"
+                    onClick={() => handleMicrosoftLogin()}
                     title="Continue with Microsoft"
+                    aria-label="Continue with Microsoft"
                   >
                     M
                   </button>
                   <button
-                    className={`btn rounded-circle ${
-                      darkMode ? 'btn-outline-light' : 'btn-outline-primary'
-                    }`}
-                    style={{ 
-                      width: '50px', 
-                      height: '50px',
-                      border: darkMode ? '1px solid rgba(255, 255, 255, 0.5)' : '2px solid #6c5ce7',
-                      color: darkMode ? 'white' : '#6c5ce7',
-                      fontWeight: '600',
-                      boxShadow: darkMode ? 'none' : '0 2px 4px rgba(108, 92, 231, 0.15)'
-                    }}
+                    type="button"
+                    className="social-button"
                     onClick={() => handleSocialLogin('Apple')}
                     title="Continue with Apple"
+                    aria-label="Continue with Apple"
                   >
-                    🍎
+                    A
                   </button>
                 </div>
 
                 {/* Switch Auth */}
                 <div className="text-center">
-                  <span className={`small ${darkMode ? 'text-light' : 'text-dark'}`}>
+                  <span className={`small ${darkMode ? 'text-light' : 'text-dark'}`} style={{fontSize: '12px'}}>
                     {isLoginView ? "Don't have an account? " : "Already have an account? "}
                     <button
                       type="button"
                       className="btn btn-link p-0 text-decoration-none"
                       style={{
                         color: darkMode ? '#a593ff' : '#6c5ce7',
-                        fontWeight: '600'
+                        fontWeight: '600',
+                        fontSize: '12px'
                       }}
                       onClick={() => switchView(isLoginView ? 'signup' : 'login')}
                     >
@@ -780,6 +912,9 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
           onClose={() => setIsModalOpen(false)}
           onSuccess={handleSocialLoginSuccess}
         />
+      )}
+      {showForgot && (
+        <ForgotPasswordModal darkMode={darkMode} onClose={() => setShowForgot(false)} />
       )}
     </>
   );
