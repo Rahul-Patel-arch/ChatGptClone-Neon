@@ -91,15 +91,11 @@
   color: #f1f5f9 !important;
 }
 
-/* 
-<<<< FIX START >>>>
-This is the new, more specific rule that will force the placeholder to be visible.
-*/
+
 .auth-input-dark::placeholder {
   color: #9ca3af !important;
 }
-/* <<<< FIX END >>>> 
-*/
+
 
 .dark .btn-outline-secondary {
   border-color: #6b7280 !important;
@@ -121,7 +117,7 @@ This is the new, more specific rule that will force the placeholder to be visibl
   border-color: #6b7280 !important;
 }
 
-/* Hide the browser's default password reveal icon */
+
 input[type="password"]::-webkit-password-reveal-button,
 input[type="password"]::-ms-reveal {
   display: none !important;
