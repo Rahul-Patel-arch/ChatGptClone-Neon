@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import "../styles/LibraryView.css";
 
 // Default images for initial library
@@ -13,30 +14,58 @@ const defaultLibraryImages = [
 export default function LibraryView({ initialImages = defaultLibraryImages, darkMode }) {
   const [images] = useState(initialImages); // no add/search
   const [selectedImage, setSelectedImage] = useState(null);
+  
+  // Get context from MainLayout for sidebar controls
+  const context = useOutletContext();
+  const { isMobile, onToggleSidebar } = context || {};
 
   const openModal = (img) => setSelectedImage(img);
   const closeModal = () => setSelectedImage(null);
 
   return (
     <div className={`library-view ${darkMode ? 'dark' : 'light'}`}>
-      <h2 className="library-title">Image Library</h2>
-
-      <div className="image-grid">
-        {images.map((img, i) => (
-          <div
-            key={i}
-            className="image-item"
-            onClick={() => openModal(img)}
-            style={{
-              background: darkMode ? 'var(--card-bg-dark, #2a2a2a)' : 'var(--card-bg, #fff)'
-            }}
+      {/* Header with mobile hamburger button */}
+      <div className="library-header">
+        {isMobile && (
+          <button
+            className="mobile-hamburger-btn"
+            onClick={onToggleSidebar}
+            aria-label="Toggle Sidebar"
           >
-            <img src={img} alt={`Library item ${i + 1}`} />
-            <div className="image-overlay">
-              <span>View</span>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              fill="none"
+            >
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+        )}
+        <h2 className="library-title">Image Library</h2>
+      </div>
+
+      <div className="library-content">
+        <div className="image-grid">
+          {images.map((img, i) => (
+            <div
+              key={i}
+              className="image-item"
+              onClick={() => openModal(img)}
+              style={{
+                background: darkMode ? 'var(--card-bg-dark, #2a2a2a)' : 'var(--card-bg, #fff)'
+              }}
+            >
+              <img src={img} alt={`Library item ${i + 1}`} />
+              <div className="image-overlay">
+                <span>View</span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {selectedImage && (

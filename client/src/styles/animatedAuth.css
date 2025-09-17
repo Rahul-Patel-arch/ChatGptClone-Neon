@@ -7,11 +7,17 @@
 .auth-page {
     min-height: 100vh;
     overflow: hidden;
-    background-color: var(--bg);
-    color: var(--text);
+    background-color: #F5F6FA; /* Default light background */
+    color: #1f2937; /* Default light text */
+    transition: background-color 0.15s ease, color 0.15s ease;
+    /* Force hardware acceleration for smoother transitions */
+    transform: translateZ(0);
+    will-change: background-color, color;
 }
 
 .auth-page.dark {
+    background-color: #0E1114; /* Dark background */
+    color: #ffffff; /* Dark text */
     --primary-color: #2196F3;
     --secondary-color: #1976D2;
     --input-bg: #333;
@@ -24,6 +30,8 @@
 }
 
 .auth-page.light {
+    background-color: #F5F6FA; /* Light background */
+    color: #1f2937; /* Light text */
     --input-bg: #f7fafc;
     --input-border: #e2e8f0;
     --primary-color: #2196F3;
@@ -52,7 +60,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .theme-toggle-btn:hover {
@@ -151,8 +159,42 @@
     width: 100%;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
     transform: scale(0);
-    transition: 0.5s ease-in-out;
+    transition: transform 0.5s ease-in-out, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     transition-delay: 1s;
+    /* Force hardware acceleration */
+    will-change: background-color, color, border-color;
+}
+
+/* Specific fast transitions for theme switching elements only */
+.auth-page .form,
+.auth-page .form p,
+.auth-page .form label,
+.auth-page .input-group,
+.auth-page .social-login-divider span,
+.auth-page .remember-me label,
+.auth-page .terms-checkbox label,
+.auth-page .demo-button,
+.auth-page .theme-toggle-btn {
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Preserve original animation transitions for slide elements */
+.text h2,
+.text p,
+.img img.content-icon,
+#auth-container::before,
+.form {
+    transition: transform 1s ease-in-out, opacity 1s ease-in-out !important;
+}
+
+/* Ensure background animation works properly */
+#auth-container::before {
+    transition: transform 1s ease-in-out !important;
+}
+
+/* But allow forms to have both animation and theme transitions */
+.form {
+    transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
 /* Override Bootstrap and ensure our input styling takes precedence */
@@ -167,7 +209,7 @@
     border-radius: 0.75rem !important;
     overflow: hidden;
     padding: 0 1rem;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     /* Reset Bootstrap input-group styles */
     flex-wrap: nowrap !important;
@@ -274,6 +316,7 @@
     margin: 1rem 0;
     font-size: 0.85rem;
     color: var(--muted-text);
+    transition: color 0.15s ease;
 }
 
 .form p span {
@@ -391,6 +434,37 @@
     text-align: right;
 }
 
+.forgot-password .btn {
+    font-size: 0.85rem;
+    color: #2196F3;
+    background: transparent;
+    border: none;
+    padding: 0;
+    outline: none !important;
+    box-shadow: none !important;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    font-weight: 500;
+}
+
+.forgot-password .btn:hover,
+.forgot-password .btn:focus {
+    text-decoration: underline;
+    color: #1976D2;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.forgot-password .btn:active {
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
 .forgot-password span {
     font-size: 0.85rem;
     color: #2196F3;
@@ -439,6 +513,7 @@
     background-color: var(--surface, #ffffff);
     color: var(--muted-text, #6b7280);
     font-size: 0.8rem;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .social-login-buttons {
@@ -448,8 +523,8 @@
 }
 
 .social-btn {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     border: 1px solid var(--border, #e2e8f0);
     background-color: var(--input-bg, #f8f9fa);
@@ -462,6 +537,7 @@
     transition: all 0.3s ease;
     font-family: Arial, sans-serif;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 0;
 }
 
 .dark .social-btn {
@@ -470,26 +546,32 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+.social-btn svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s ease;
+}
+
 .social-btn.google {
-    color: #DB4437;
+    border-color: #4285F4;
 }
 
 .social-btn.microsoft {
-    color: #0078D4;
-}
-
-.social-btn.apple {
-    color: #000000;
-}
-
-.dark .social-btn.apple {
-    color: #ffffff;
+    border-color: #0078D4;
 }
 
 .social-btn:hover {
     background-color: var(--hover-overlay);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.social-btn:hover svg {
+    transform: scale(1.1);
+}
+
+.dark .social-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Dark mode specific adjustments */
@@ -497,6 +579,7 @@
     background-color: var(--surface);
     color: var(--text);
     border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.5s ease-in-out, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .auth-page.dark .logo-mobile h3 {
@@ -540,6 +623,15 @@
 #auth-container.sign-up .form.sign-up {
     transform: scale(1);
     opacity: 1;
+    transition-delay: 0.6s; /* Forms animate in after background */
+}
+
+/* Forms that are not active should be scaled down */
+#auth-container.sign-in .form.sign-up,
+#auth-container.sign-up .form.sign-in {
+    transform: scale(0);
+    opacity: 0;
+    transition-delay: 0s; /* Forms animate out immediately */
 }
 
 .content-row {
@@ -777,12 +869,14 @@
         border-radius: 1rem;
         background-color: var(--surface);
         max-width: 100%;
+        transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
     
     /* Ensure dark mode forms look good */
     .auth-page.dark .form {
         background-color: var(--surface);
         border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: transform 0.5s ease-in-out, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     .text {
@@ -910,8 +1004,13 @@
     }
     
     .social-btn {
-        width: 36px;
-        height: 36px;
+        width: 42px;
+        height: 42px;
+    }
+    
+    .social-btn svg {
+        width: 18px;
+        height: 18px;
     }
 }
 

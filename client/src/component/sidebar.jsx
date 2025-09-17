@@ -28,14 +28,39 @@ export default function Sidebar({
   const shouldShowFull = !isCollapsed;
   const activeChats = chats.filter(c => !c.archived);
 
+  // Handle mobile overlay click to close sidebar
+  const handleOverlayClick = () => {
+    if (isMobile && !isCollapsed) {
+      onToggle();
+    }
+  };
+
   return (
     <>
+      {/* Mobile overlay */}
+      {isMobile && !isCollapsed && (
+        <div 
+          className="sidebar-overlay"
+          onClick={handleOverlayClick}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.3)',
+            zIndex: 999,
+            backdropFilter: 'blur(2px)'
+          }}
+        />
+      )}
+      
       <div
         className={`sidebar ${isMobile ? 'mobile' : ''} ${isCollapsed ? 'collapsed' : ''}`}
-        style={{
-          width: shouldShowFull ? 'var(--sidebar-width)' : '60px',
+        style={{ 
+          width: isMobile ? (isCollapsed ? '0px' : '280px') : (shouldShowFull ? 'var(--sidebar-width)' : '60px'),
           left: 0,
-          transform: isMobile && isCollapsed ? 'translateX(-100%)' : 'translateX(0)'
+          transform: isMobile ? (isCollapsed ? 'translateX(-100%)' : 'translateX(0)') : 'translateX(0)'
         }}
         data-theme={darkMode ? 'dark' : 'light'}
       >

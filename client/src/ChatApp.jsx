@@ -1,4 +1,5 @@
 // client/src/ChatApp.jsx
+// Fixed mobile sidebar integration - v1.4 - AGGRESSIVE send button fix
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
@@ -27,29 +28,25 @@ export default function ChatApp() {
   const onPermanentlyDeleteChat = outlet.onPermanentlyDeleteChat || (()=>{});
   const onRename = outlet.onRename || (()=>{});
   const onDelete = outlet.onDelete || (()=>{});
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
+  // Use MainLayout's sidebar state instead of local state
+  const sidebarCollapsed = outlet.sidebarCollapsed || false;
+  const onToggleSidebar = outlet.onToggleSidebar || (()=>{});
+  const isMobile = outlet.isMobile !== undefined ? outlet.isMobile : (typeof window !== 'undefined' && window.innerWidth < 768);
+  
   const [showSettings, setShowSettings] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingResponse, setStreamingResponse] = useState('');
   const [forceUpdate, setForceUpdate] = useState(0);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const [messages, setMessages] = useState([]);
   const [activeMessages, setActiveMessages] = useState([]);
   const [input, setInput] = useState("");
   const hasLoadedChatsRef = useRef(false);
 
-  // Responsive sidebar
+  // Responsive sidebar and settings event handling
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener('resize', handleResize);
     // Open settings when triggered by layout/profile
-    const openSettingsHandler = () => setShowSettings(true);
-    window.addEventListener('open-settings', openSettingsHandler);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-  useEffect(() => {
     const openSettingsHandler = () => setShowSettings(true);
     window.addEventListener('open-settings', openSettingsHandler);
     return () => window.removeEventListener('open-settings', openSettingsHandler);
@@ -62,7 +59,6 @@ export default function ChatApp() {
   }, [outlet.chats, outlet.activeChatId]);
 
   const toggleDarkMode = () => { toggleTheme(); setTimeout(() => setForceUpdate(prev => prev + 1), 0); };
-  const toggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed);
   const handleSettings = () => setShowSettings(true);
   const handleCloseSettings = () => setShowSettings(false);
   const handleSettingsChange = (newSettings) => {
@@ -255,6 +251,7 @@ export default function ChatApp() {
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
         sidebarCollapsed={sidebarCollapsed}
+        isMobile={isMobile}
         messages={activeMessages}
         message={input}
         setMessage={setInput}
@@ -262,10 +259,12 @@ export default function ChatApp() {
         currentUser={currentUser}
         isLoading={isLoading}
         forceUpdate={forceUpdate}
-        onToggleSidebar={toggleSidebar}
+        onToggleSidebar={onToggleSidebar}
         onOpenSettings={handleSettings}
         onShareMessage={handleShareMessage}
         onGlobalShare={handleGlobalShare}
+        activeChat={chats.find(c => c.id === activeChatId)}
+        activeChatId={activeChatId}
       />
 
       <SettingsPanel

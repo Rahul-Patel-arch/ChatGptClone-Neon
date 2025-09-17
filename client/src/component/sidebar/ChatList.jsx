@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { MoreVertical } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { MoreVertical, Check, X } from 'lucide-react';
 import ChatItemMenu from './ChatItemMenu';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,7 +15,19 @@ export default function ChatList({
   onShare
 }) {
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [editingChatId, setEditingChatId] = useState(null);
+  const [editingTitle, setEditingTitle] = useState('');
+  const editInputRef = useRef(null);
   const navigate = useNavigate();
+  
+  // Focus the input when entering edit mode
+  useEffect(() => {
+    if (editingChatId && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.select();
+    }
+  }, [editingChatId]);
+
   if (!shouldShowFull) return null;
 
   if (chats.length === 0) {
@@ -27,8 +39,38 @@ export default function ChatList({
   }
 
   const handleChatClick = (chatId) => {
+    if (editingChatId) return; // Don't navigate while editing
     if (onSelectChat) onSelectChat(chatId);
     navigate('/');
+  };
+
+  const handleStartRename = (chatId, currentTitle) => {
+    setEditingChatId(chatId);
+    setEditingTitle(currentTitle);
+    setOpenMenuId(null);
+  };
+
+  const handleSaveRename = () => {
+    if (onRename && editingChatId && editingTitle.trim()) {
+      onRename(editingChatId, editingTitle.trim());
+    }
+    setEditingChatId(null);
+    setEditingTitle('');
+  };
+
+  const handleCancelRename = () => {
+    setEditingChatId(null);
+    setEditingTitle('');
+  };
+
+  const handleRenameKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveRename();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancelRename();
+    }
   };
 
   return (
@@ -38,48 +80,84 @@ export default function ChatList({
         {chats.map((chat, i) => {
           const isActive = activeChatId === chat.id;
           const isMenuOpen = openMenuId === chat.id;
+          const isEditing = editingChatId === chat.id;
+          
           return (
             <div
               key={chat.id || i}
-              className={`chat-item with-actions ${isActive ? 'active' : ''} ${isMenuOpen ? 'menu-open' : ''}`}
+              className={`chat-item with-actions ${isActive ? 'active' : ''} ${isMenuOpen ? 'menu-open' : ''} ${isEditing ? 'editing' : ''}`}
             >
-              <button
-                className="chat-main-btn"
-                onClick={() => handleChatClick(chat.id)}
-                title={chat.title}
-              >
-                <span className="chat-title text-truncate">{chat.title}</span>
-              </button>
-              <div className="chat-actions">
-                <button
-                  className="chat-action-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenMenuId(prev => prev === chat.id ? null : chat.id);
-                  }}
-                  aria-haspopup="true"
-                  aria-expanded={isMenuOpen}
-                  aria-label="Chat options"
-                >
-                  <MoreVertical size={14} />
-                </button>
-                {isMenuOpen && (
-                  <ChatItemMenu
-                    onRename={() => {
-                      const newTitle = window.prompt('Rename chat', chat.title);
-                      if (newTitle && newTitle.trim()) onRename && onRename(chat.id, newTitle.trim());
-                    }}
-                    onShare={() => onShare && onShare(chat.id)}
-                    onArchive={() => onArchive && onArchive(chat.id)}
-                    onDelete={() => onDelete && onDelete(chat.id)}
-                    onClose={() => setOpenMenuId(null)}
+              {isEditing ? (
+                // Inline edit mode
+                <div className="chat-rename-inline">
+                  <input
+                    ref={editInputRef}
+                    type="text"
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    onKeyDown={handleRenameKeyDown}
+                    onBlur={handleSaveRename}
+                    className="chat-rename-input"
+                    placeholder="Enter chat name..."
                   />
-                )}
-              </div>
+                  <div className="chat-rename-actions">
+                    <button
+                      onClick={handleSaveRename}
+                      className="chat-rename-btn save"
+                      title="Save (Enter)"
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={handleCancelRename}
+                      className="chat-rename-btn cancel"
+                      title="Cancel (Escape)"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Normal display mode
+                <>
+                  <button
+                    className="chat-main-btn"
+                    onClick={() => handleChatClick(chat.id)}
+                    title={chat.title}
+                  >
+                    <span className="chat-title text-truncate">{chat.title}</span>
+                  </button>
+                  <div className="chat-actions">
+                    <button
+                      className="chat-action-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(prev => prev === chat.id ? null : chat.id);
+                      }}
+                      aria-haspopup="true"
+                      aria-expanded={isMenuOpen}
+                      aria-label="Chat options"
+                    >
+                      <MoreVertical size={14} />
+                    </button>
+                    {isMenuOpen && (
+                      <ChatItemMenu
+                        chatId={chat.id}
+                        onRename={() => handleStartRename(chat.id, chat.title)}
+                        onShare={() => onShare && onShare(chat.id)}
+                        onArchive={() => onArchive && onArchive(chat.id)}
+                        onDelete={() => onDelete && onDelete(chat.id)}
+                        onClose={() => setOpenMenuId(null)}
+                      />
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           );
         })}
       </div>
+      
     </div>
   );
 }

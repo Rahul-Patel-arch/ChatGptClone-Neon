@@ -449,7 +449,7 @@
   background-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Responsive design */
+/* Responsive design improvements */
 @media (max-width: 992px) {
   .auth-branding h1 {
     font-size: 2.5rem;
@@ -458,15 +458,32 @@
   .auth-branding p {
     font-size: 1rem;
   }
+  
+  .auth-form-container {
+    padding: 1.5rem;
+  }
 }
 
 @media (max-width: 768px) {
   .auth-container {
     flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height */
   }
 
   .auth-branding {
     padding: 2rem 1rem;
+    flex: 0 0 auto; /* Don't grow/shrink, size based on content */
+    min-height: 40vh; /* Ensure adequate space */
+  }
+  
+  .auth-form-container {
+    flex: 1;
+    padding: 1.5rem 1rem;
+    justify-content: flex-start;
+    padding-top: 2rem;
+    /* Safe area support */
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
   }
 
   .auth-logo {
@@ -486,12 +503,27 @@
   
   .auth-form-box {
     padding: 1.5rem;
+    box-shadow: none; /* Remove shadow on mobile for cleaner look */
+    border-radius: 0;
+    background: transparent;
+  }
+  
+  /* Ensure form inputs are properly sized for mobile */
+  .auth-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.875rem 1rem 0.875rem 2.75rem;
+  }
+  
+  .auth-btn {
+    padding: 0.875rem 1rem;
+    font-size: 16px;
   }
 }
 
 @media (max-width: 480px) {
   .auth-branding {
     padding: 1.5rem 1rem;
+    min-height: 35vh;
   }
   
   .auth-logo {
@@ -504,7 +536,14 @@
   }
   
   .auth-form-container {
-    padding: 1.5rem 1rem;
+    padding: 1rem;
+    padding-top: 1.5rem;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .auth-form-box {
+    padding: 1rem;
+    max-width: 100%;
   }
   
   .form-options {
@@ -515,5 +554,67 @@
   
   .social-login {
     gap: 0.75rem;
+  }
+  
+  .social-btn {
+    width: 44px;
+    height: 44px;
+  }
+  
+  /* Improve touch targets */
+  .remember-me input[type="checkbox"],
+  .terms-checkbox input[type="checkbox"] {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+  
+  /* Better spacing for small screens */
+  .auth-form {
+    gap: 1rem;
+  }
+  
+  .auth-input-group {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Landscape mobile adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+  .auth-container {
+    flex-direction: row;
+  }
+  
+  .auth-branding {
+    flex: 0 0 40%;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  
+  .auth-form-container {
+    flex: 1;
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow-y: auto;
+  }
+}
+
+/* High DPI / Retina display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .auth-logo {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Focus improvements for better accessibility */
+@media (max-width: 768px) {
+  .auth-input:focus {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+  }
+  
+  .auth-btn:focus {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
   }
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Book, Search, Zap } from 'lucide-react';
+import { Book, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 // Collapsed: minimal essential (Search first for quicker access, then Library)
@@ -10,8 +10,7 @@ const collapsedNavItems = [
 
 // Expanded: full suite similar to ChatGPT left group
 const fullNavItems = [
-  { icon: Book, label: 'Library', id: 'library' },
-  { icon: Zap, label: 'AI Tools', id: 'ai-tools' }
+  { icon: Book, label: 'Library', id: 'library' }
 ];
 
 export default function SidebarNav({ isCollapsed, shouldShowFull, onNavClick, onSearchClick }) {
@@ -21,8 +20,6 @@ export default function SidebarNav({ isCollapsed, shouldShowFull, onNavClick, on
       onSearchClick();
     } else if (itemId === 'library') {
       navigate('/library');
-    } else if (itemId === 'ai-tools') {
-      navigate('/aitools');
     } else if (onNavClick) {
       onNavClick(itemId);
     }

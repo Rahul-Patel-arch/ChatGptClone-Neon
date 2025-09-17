@@ -10,7 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@azure/msal-browser": "^4.22.1",
+    "@emailjs/browser": "^4.4.1",
     "@google/generative-ai": "^0.24.1",
+    "@react-oauth/google": "^0.12.2",
+    "axios": "^1.12.2",
     "bootstrap": "^5.3.8",
     "framer-motion": "^12.23.12",
     "jspdf": "^3.0.2",

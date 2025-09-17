@@ -4,9 +4,39 @@ import { Outlet, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 
 export default function MainLayout(props) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768); // Use <= instead of < for consistency
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth <= 768); // Start collapsed on mobile
+  
+  // Mobile-first responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      const newIsMobile = window.innerWidth <= 768; // Use <= for consistency with CSS
+      const wasMobile = isMobile;
+      setIsMobile(newIsMobile);
+      
+      // Only auto-manage sidebar on screen size changes, not on initial load
+      // Allow manual toggle on mobile
+      if (!wasMobile && newIsMobile) {
+        // Switching from desktop to mobile - collapse sidebar
+        setSidebarCollapsed(true);
+      } else if (wasMobile && !newIsMobile && window.innerWidth > 1024) {
+        // Switching from mobile to desktop - expand sidebar on large screens
+        setSidebarCollapsed(false);
+      }
+    };
+    
+    // Don't call handleResize on initial mount to avoid overriding initial state
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobile]); // Remove sidebarCollapsed dependency
+  
   // settingsOpen is handled inside ChatApp; MainLayout will dispatch an event to open settings there
-  const toggleSidebar = () => setSidebarCollapsed((prev) => !prev);
+  const toggleSidebar = () => {
+    setSidebarCollapsed((prev) => {
+      const newValue = !prev;
+      return newValue;
+    });
+  };
 
   const location = useLocation();
   const hideSidebarOn = ["/login", "/signup", "/register"];
@@ -43,7 +73,7 @@ export default function MainLayout(props) {
     }
   }, [chats]);
 
-  const sidebarWidth = sidebarCollapsed ? 60 : 260;
+  const sidebarWidth = sidebarCollapsed ? (isMobile ? 0 : 60) : (isMobile ? 260 : 280);
 
   // Chat operations exposed to children
   const handleNewChat = () => {
@@ -84,6 +114,7 @@ export default function MainLayout(props) {
         <Sidebar
           {...props}
           isCollapsed={sidebarCollapsed}
+          isMobile={isMobile}
           onToggle={toggleSidebar}
           onSettings={() => window.dispatchEvent(new CustomEvent('open-settings'))}
           chats={chats}
@@ -96,11 +127,34 @@ export default function MainLayout(props) {
           onShare={props.onShare}
         />
       )}
+      
+      {/* Mobile overlay when sidebar is open - only covers content area, not sidebar */}
+      {shouldShowSidebar && isMobile && !sidebarCollapsed && (
+        <div 
+          className="mobile-sidebar-overlay" 
+          onClick={toggleSidebar}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: '280px', // Start overlay after sidebar width
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.3)',
+            zIndex: 1070,
+            pointerEvents: 'auto'
+          }}
+        />
+      )}
+      
       <div
-        className={`main-content${shouldShowSidebar ? "" : " auth-page"}`}
+        className={`main-content${shouldShowSidebar ? "" : " auth-page"} ${isMobile ? " mobile" : ""} ${sidebarCollapsed ? " sidebar-collapsed" : ""}`}
         style={{
           flex: 1,
-          marginLeft: shouldShowSidebar ? `${sidebarWidth}px` : 0
+          marginLeft: shouldShowSidebar ? (isMobile ? 0 : `${sidebarWidth}px`) : 0,
+          transition: 'margin-left 0.3s ease',
+          width: isMobile ? '100%' : 'auto',
+          position: 'relative',
+          '--sidebar-width': shouldShowSidebar ? (isMobile ? '0px' : `${sidebarWidth}px`) : '0px'
         }}
       >
         <Outlet context={{
@@ -116,7 +170,11 @@ export default function MainLayout(props) {
           onRestoreChat: handleRestoreChat,
           onPermanentlyDeleteChat: handlePermanentlyDeleteChat,
           onRename: handleRenameChat,
-          onDelete: handleDeleteChat
+          onDelete: handleDeleteChat,
+          // Add sidebar controls for ChatApp
+          sidebarCollapsed,
+          onToggleSidebar: toggleSidebar,
+          isMobile
         }} />
       </div>
       {/* SettingsPanel is owned by ChatApp so it has access to chats and handlers; MainLayout opens it via a window event */}

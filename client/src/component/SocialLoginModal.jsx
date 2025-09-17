@@ -5,6 +5,8 @@ import { X, Loader } from 'lucide-react';
 export default function SocialLoginModal({ provider, darkMode, onClose, onSuccess }) {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
 
   useEffect(() => {
     if (isLoading) {
@@ -26,6 +28,18 @@ export default function SocialLoginModal({ provider, darkMode, onClose, onSucces
   }, [isLoading, provider, onSuccess]);
 
   const handleLogin = () => {
+    // For Google we allow an inline email capture flow (no external popup)
+    if (provider === 'Google') {
+      setIsLoading(true);
+      setProgress(0);
+      // simulate creation then call onSuccess with a small user object
+      setTimeout(() => {
+        const user = { id: Date.now(), email: email || `user@google.com`, username: username || (email ? email.split('@')[0] : 'GoogleUser'), provider: 'Google', createdAt: new Date().toISOString(), lastLogin: new Date().toISOString(), isActive: true, preferences: { theme: 'system', language: 'en', notifications: true } };
+        onSuccess(provider, user);
+      }, 900);
+      return;
+    }
+
     setIsLoading(true);
     setProgress(0);
   };
@@ -117,29 +131,23 @@ export default function SocialLoginModal({ provider, darkMode, onClose, onSucces
 
               {!isLoading ? (
                 <div>
-                  <p className={`small mb-3 ${darkMode ? 'text-light' : 'text-muted'}`} style={{fontSize: '12px'}}>
-                    You'll be redirected to {provider} to complete your login.
-                  </p>
-
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="btn text-white px-4 py-2 rounded-pill fw-semibold mb-2"
-                    style={{
-                      backgroundColor: getProviderColor(),
-                      border: 'none',
-                      boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
-                    }}
-                    onClick={handleLogin}
-                  >
-                    Continue
-                  </motion.button>
-
-                  <div>
-                    <small className={`${darkMode ? 'text-light' : 'text-muted'}`} style={{fontSize: '11px'}}>
-                      By continuing, you agree to our Terms of Service
-                    </small>
-                  </div>
+                  {provider === 'Google' ? (
+                    <div>
+                      <p className={`small mb-2 ${darkMode ? 'text-light' : 'text-muted'}`} style={{fontSize: '12px'}}>Sign in with your Google email (demo inline flow)</p>
+                      <div className="mb-2">
+                        <input type="email" className={`form-control mb-2 ${darkMode ? 'bg-dark-subtle text-white border-secondary' : ''}`} placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                        <input type="text" className={`form-control ${darkMode ? 'bg-dark-subtle text-white border-secondary' : ''}`} placeholder="Username (optional)" value={username} onChange={(e) => setUsername(e.target.value)} />
+                      </div>
+                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="btn text-white px-4 py-2 rounded-pill fw-semibold mb-2" style={{ backgroundColor: getProviderColor(), border: 'none' }} onClick={handleLogin}>Continue</motion.button>
+                      <div><small className={`${darkMode ? 'text-light' : 'text-muted'}`} style={{fontSize: '11px'}}>This is a demo inline flow. Real Google OAuth should use Google popups or server-side auth.</small></div>
+                    </div>
+                  ) : (
+                    <>
+                      <p className={`small mb-3 ${darkMode ? 'text-light' : 'text-muted'}`} style={{fontSize: '12px'}}>You'll be redirected to {provider} to complete your login.</p>
+                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="btn text-white px-4 py-2 rounded-pill fw-semibold mb-2" style={{ backgroundColor: getProviderColor(), border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }} onClick={handleLogin}>Continue</motion.button>
+                      <div><small className={`${darkMode ? 'text-light' : 'text-muted'}`} style={{fontSize: '11px'}}>By continuing, you agree to our Terms of Service</small></div>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div>
