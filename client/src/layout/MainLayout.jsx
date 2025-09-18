@@ -63,7 +63,8 @@ export default function MainLayout(props) {
         messages: chat.messages.map((m) => ({ role: m.role, text: m.text })),
       };
   const encoded = encodeURIComponent(btoa(JSON.stringify(data)));
-  const shareUrl = `${window.location.origin}/shared-chat?data=${encoded}`;
+  const { buildSharedChatUrl } = await import("../utils/urlHelpers");
+  const shareUrl = buildSharedChatUrl(encoded);
       if (navigator.share) {
         try {
           await navigator.share({

@@ -425,7 +425,8 @@ export default function ChatApp() {
   // 📤 New helper function to handle sharing logic
   const shareData = async (data, title) => {
     const encodedData = encodeURIComponent(btoa(JSON.stringify(data)));
-    const shareUrl = `${window.location.origin}/shared-chat?data=${encodedData}`;
+    const { buildSharedChatUrl } = await import("./utils/urlHelpers");
+    const shareUrl = buildSharedChatUrl(encodedData);
 
     if (navigator.share) {
       try {
