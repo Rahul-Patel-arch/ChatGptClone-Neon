@@ -108,6 +108,27 @@ function App() {
             )
           }
         />
+        {/* Shared view: show full app shell when logged in; standalone when logged out */}
+        {loggedIn ? (
+          <Route
+            path="/shared-chat"
+            element={
+              <MainLayout
+                currentUser={currentUser}
+                onLogout={handleLogout}
+                darkMode={effectiveDark}
+                toggleDarkMode={toggleDarkMode}
+                themeMode={themeMode}
+                setThemeMode={setThemeMode}
+              />
+            }
+          >
+            <Route index element={<SharedChatView />} />
+          </Route>
+        ) : (
+          <Route path="/shared-chat" element={<SharedChatView />} />
+        )}
+
         <Route
           path="/reset-password"
           element={
@@ -177,7 +198,6 @@ function App() {
           <Route path="update" element={<UpgradePlan />} />
           <Route path="checkout" element={<Checkout />} />
           <Route path="library" element={<LibraryView />} />
-          <Route path="shared-chat" element={<SharedChatView />} />
         </Route>
       </Routes>
     </Router>

@@ -74,7 +74,7 @@ export default function ChatApp() {
   const sanitizeTitle = (s) =>
     (s || "")
       .replaceAll("\n", " ")
-      .replace(/[#>*`_\-]+/g, " ") // remove markdown-y chars
+      .replace(/[#>*`_-]+/g, " ") // remove markdown-y chars
       .replace(/\s+/g, " ") // collapse whitespace
       .replace(/[\u200B-\u200D\uFEFF]/g, "") // zero-width chars
       .replace(/^[^A-Za-z0-9]+/, "") // trim leading non-alnum
@@ -424,7 +424,7 @@ export default function ChatApp() {
 
   // 📤 New helper function to handle sharing logic
   const shareData = async (data, title) => {
-    const encodedData = btoa(JSON.stringify(data));
+    const encodedData = encodeURIComponent(btoa(JSON.stringify(data)));
     const shareUrl = `${window.location.origin}/shared-chat?data=${encodedData}`;
 
     if (navigator.share) {

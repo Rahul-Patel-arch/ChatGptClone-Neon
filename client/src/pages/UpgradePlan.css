@@ -7,10 +7,11 @@
   justify-content: center;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
-  z-index: 4000;
+  z-index: 20000; /* above sidebar and headers */
   padding: 20px;
   box-sizing: border-box;
   overflow-y: auto;
+  pointer-events: auto;
 }
 
 .upgrade-container {

@@ -1,0 +1,192 @@
+/* SharedChatView.css - modern, responsive shared chat UI */
+
+:root {
+  --scv-bg: var(--app-bg, #f5f6fa);
+  --scv-surface: var(--surface, #ffffff);
+  --scv-text: var(--text, #111827);
+  --scv-muted: var(--muted, #6b7280);
+  --scv-border: var(--border, #e5e7eb);
+  --scv-primary: var(--primary, #6c63ff);
+  --scv-primary-contrast: #ffffff;
+}
+
+.shared-view-container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, rgba(108, 99, 255, 0.06), transparent 300px), var(--scv-bg);
+  color: var(--scv-text);
+}
+
+.shared-view-container.dark-mode {
+  --scv-bg: #0e1114;
+  --scv-surface: #12161a;
+  --scv-text: #e5e7eb;
+  --scv-muted: #9ca3af;
+  --scv-border: #1f2937;
+  background: linear-gradient(180deg, rgba(108, 99, 255, 0.12), transparent 300px), var(--scv-bg);
+}
+
+.shared-view-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: color-mix(in oklab, var(--scv-surface) 82%, transparent);
+  backdrop-filter: saturate(1.1) blur(10px);
+  border-bottom: 1px solid var(--scv-border);
+}
+
+.shared-view-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.shared-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scv-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--scv-border);
+  background: var(--scv-surface);
+  color: var(--scv-text);
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.scv-icon-btn:hover {
+  border-color: color-mix(in oklab, var(--scv-border), var(--scv-text) 20%);
+  background: color-mix(in oklab, var(--scv-surface), var(--scv-text) 6%);
+}
+
+.scv-icon-btn:active { transform: translateY(1px); }
+
+.scv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--scv-border);
+  background: var(--scv-surface);
+  color: var(--scv-text);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.scv-btn:hover { border-color: color-mix(in oklab, var(--scv-border), var(--scv-text) 20%); }
+.scv-btn:active { transform: translateY(1px); }
+
+.scv-btn.primary {
+  background: var(--scv-primary);
+  color: var(--scv-primary-contrast);
+  border-color: color-mix(in oklab, var(--scv-primary), black 8%);
+}
+
+.scv-content {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 18px 16px 56px;
+}
+
+.scv-card {
+  background: var(--scv-surface);
+  border: 1px solid var(--scv-border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.chat-messages-container {
+  padding: 8px;
+}
+
+.msg-container {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.msg-container.user-container { justify-content: flex-start; }
+.msg-container.bot-container { justify-content: flex-start; }
+
+.msg-avatar {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in oklab, var(--scv-primary) 20%, var(--scv-surface));
+  color: var(--scv-primary-contrast);
+  font-weight: 700;
+  border: 1px solid var(--scv-border);
+  overflow: hidden;
+}
+
+.msg-content-wrapper {
+  max-width: min(86%, 740px);
+}
+
+.msg {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--scv-border);
+  background: var(--scv-surface);
+  color: var(--scv-text);
+  line-height: 1.55;
+  font-size: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.msg.user {
+  background: color-mix(in oklab, var(--scv-primary) 12%, var(--scv-surface));
+  border-color: color-mix(in oklab, var(--scv-border), var(--scv-primary) 22%);
+}
+
+.msg.bot {
+  background: var(--scv-surface);
+}
+
+/* MarkdownMessage tweaks inside bubbles */
+.msg :where(pre, code) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+.msg pre {
+  background: color-mix(in oklab, var(--scv-surface), black 6%);
+  border: 1px solid var(--scv-border);
+  border-radius: 10px;
+  padding: 12px;
+  overflow: auto;
+}
+.msg a { color: var(--scv-primary); text-decoration: none; }
+.msg a:hover { text-decoration: underline; }
+
+.scv-empty-state {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--scv-muted);
+}
+
+@media (max-width: 640px) {
+  .msg-content-wrapper { max-width: 100%; }
+  .shared-view-title { font-size: 16px; }
+  .scv-btn { height: 32px; padding: 0 10px; }
+  .scv-icon-btn { width: 36px; height: 36px; }
+}
