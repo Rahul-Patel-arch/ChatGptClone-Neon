@@ -62,8 +62,8 @@ export default function MainLayout(props) {
         title: chat.title || "QuantumChat Conversation",
         messages: chat.messages.map((m) => ({ role: m.role, text: m.text })),
       };
-      const encoded = btoa(JSON.stringify(data));
-      const shareUrl = `${window.location.origin}/shared-chat?data=${encoded}`;
+  const encoded = encodeURIComponent(btoa(JSON.stringify(data)));
+  const shareUrl = `${window.location.origin}/shared-chat?data=${encoded}`;
       if (navigator.share) {
         try {
           await navigator.share({
@@ -175,7 +175,9 @@ export default function MainLayout(props) {
           // Ensure no gaps during transition (but allow scroll on certain routes)
           overflowX: "hidden",
           overflowY:
-            location.pathname.startsWith("/checkout") || location.pathname.startsWith("/update")
+            location.pathname.startsWith("/checkout") ||
+            location.pathname.startsWith("/update") ||
+            location.pathname.startsWith("/upgrade")
               ? "auto"
               : "hidden",
           isolation: "isolate",

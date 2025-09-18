@@ -13,7 +13,6 @@ import {
   ChevronDown,
 } from "lucide-react";
 import MarkdownMessage from "./MarkdownMessage";
-import { fileToGeminiPart } from "../services/geminiService";
 import FileUploader from "./FileUploader";
 import "../styles/chat-input-fixes.css"; // Emergency fixes
 
@@ -53,7 +52,7 @@ export default function ChatArea({
   const chatContentRef = React.useRef(null);
   const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
   const [hasNewWhileAway, setHasNewWhileAway] = React.useState(false);
-  const fileInputRef = React.useRef(null);
+  // const fileInputRef = React.useRef(null); // removed (unused)
   const recognitionRef = React.useRef(null);
 
   // Helper: check if near bottom (within threshold)
@@ -294,7 +293,7 @@ export default function ChatArea({
           <div className="chat-input-pill">
             {/* File uploader (hidden input via render-prop) */}
             <FileUploader
-              onSelect={({ part, file, label }) => {
+              onSelect={({ part, label }) => {
                 setPendingAttachment({ name: label, part });
                 setMessage((prev) => (prev ? prev + " " : "") + `[attached: ${label}] `);
                 showNotification(`Attached: ${label}`);

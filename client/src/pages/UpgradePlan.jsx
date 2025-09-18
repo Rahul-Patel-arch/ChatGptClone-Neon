@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, X, Crown } from "lucide-react";
@@ -18,7 +19,7 @@ const UpgradePlan = ({ onClose }) => {
     navigate("/checkout?plan=pro&price=599&currency=₹");
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         className="upgrade-overlay"
@@ -166,7 +167,8 @@ const UpgradePlan = ({ onClose }) => {
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 

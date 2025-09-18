@@ -5,9 +5,6 @@ export default function SidebarActions({
   shouldShowFull,
   onNewChat,
   onSearchClick,
-  // We'll accept onToggle via props if parent wires it; if absent, fallback to no-op
-  onToggle,
-  onNotify,
 }) {
   const navigate = useNavigate();
   const location = useLocation();

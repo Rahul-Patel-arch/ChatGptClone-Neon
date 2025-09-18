@@ -1,0 +1,10 @@
+{
+  "redirects": [],
+  "rewrites": [
+    { "source": "/shared-chat", "destination": "/index.html" },
+    { "source": "/shared-chat/*", "destination": "/index.html" },
+    { "source": "/reset-password", "destination": "/index.html" },
+    { "source": "/reset-password/*", "destination": "/index.html" },
+    { "source": "/*", "destination": "/index.html" }
+  ]
+}
