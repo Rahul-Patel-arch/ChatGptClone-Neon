@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import useThemeMode from "./hooks/useThemeMode";
 import useSession from "./hooks/useSession";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { getRouterMode } from "./utils/urlHelpers";
 import ChatApp from "./ChatApp";
 import SharedChatView from "./pages/SharedChatView";
 import LibraryView from "./pages/LibraryView";
@@ -90,8 +91,9 @@ function App() {
     );
   }
 
+  const RouterImpl = getRouterMode() === "hash" ? HashRouter : BrowserRouter;
   return (
-    <Router>
+    <RouterImpl>
       <Routes>
         {/* Auth pages (no sidebar) */}
         <Route
@@ -200,7 +202,7 @@ function App() {
           <Route path="library" element={<LibraryView />} />
         </Route>
       </Routes>
-    </Router>
+    </RouterImpl>
   );
 }
 

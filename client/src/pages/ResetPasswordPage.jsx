@@ -49,7 +49,8 @@ export default function ResetPasswordPage({ darkMode }) {
     setResendState((s) => ({ ...s, sending: true, error: "", copied: false }));
     try {
       const token = await createStatelessResetToken(params.email);
-      const link = `${window.location.origin}/reset-password?email=${encodeURIComponent(params.email)}&prt=${encodeURIComponent(token)}`;
+  const { buildResetPasswordUrl } = await import("../utils/urlHelpers");
+  const link = buildResetPasswordUrl(params.email, token);
       // Attempt email send if configured
       const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const templateId = import.meta.env.VITE_EMAILJS_FORGOT_PASSWORD_TEMPLATE_ID;

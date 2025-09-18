@@ -428,7 +428,8 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
       const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
       const templateId = import.meta.env.VITE_EMAILJS_FORGOT_PASSWORD_TEMPLATE_ID;
       const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-      const resetLink = `${window.location.origin}/reset-password?email=${encodeURIComponent(foundUser.email)}&prt=${encodeURIComponent(statelessToken)}`;
+  const { buildResetPasswordUrl } = await import("../utils/urlHelpers");
+  const resetLink = buildResetPasswordUrl(foundUser.email, statelessToken);
       if (serviceId && templateId && publicKey) {
         emailjs
           .send(
