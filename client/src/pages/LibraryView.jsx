@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
+import Header from "../component/Header";
+import SettingsPanel from "../component/SettingsPanel/SettingsPanel";
 import "../styles/LibraryView.css";
 
 // Default images for initial library
@@ -11,44 +13,56 @@ const defaultLibraryImages = [
   "https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?w=1080&auto=format&fit=crop&q=80",
 ];
 
-export default function LibraryView({ initialImages = defaultLibraryImages, darkMode }) {
+export default function LibraryView({ initialImages = defaultLibraryImages }) {
   const [images] = useState(initialImages); // no add/search
   const [selectedImage, setSelectedImage] = useState(null);
-  
-  // Get context from MainLayout for sidebar controls
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Get context from MainLayout for sidebar controls and theme
   const context = useOutletContext();
-  const { isMobile, onToggleSidebar } = context || {};
+  const {
+    isMobile,
+    onToggleSidebar,
+    sidebarCollapsed,
+    darkMode,
+    toggleDarkMode,
+    currentUser,
+    chats,
+    onRestoreChat,
+    onPermanentlyDeleteChat,
+  } = context || {};
+
+  // Listen for settings panel open event
+  useEffect(() => {
+    const openSettingsHandler = () => setShowSettings(true);
+    window.addEventListener("open-settings", openSettingsHandler);
+    return () => window.removeEventListener("open-settings", openSettingsHandler);
+  }, []);
+
+  const handleCloseSettings = () => setShowSettings(false);
+  const handleSettingsChange = () => {}; // Simplified since theme is managed by MainLayout
 
   const openModal = (img) => setSelectedImage(img);
   const closeModal = () => setSelectedImage(null);
 
   return (
-    <div className={`library-view ${darkMode ? 'dark' : 'light'}`}>
-      {/* Header with mobile hamburger button */}
-      <div className="library-header">
-        {isMobile && (
-          <button
-            className="mobile-hamburger-btn"
-            onClick={onToggleSidebar}
-            aria-label="Toggle Sidebar"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              fill="none"
-            >
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
-          </button>
-        )}
-        <h2 className="library-title">Image Library</h2>
-      </div>
+    <div
+      className={`library-view ${darkMode ? "dark" : "light"}`}
+      style={{ display: "flex", flexDirection: "column", height: "100vh" }}
+    >
+      {/* Header with theme toggle */}
+      <Header
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
+        onToggleSidebar={onToggleSidebar}
+        isMobile={isMobile}
+        sidebarCollapsed={sidebarCollapsed}
+        activeChat={{ title: "Image Library" }}
+        messages={[]}
+        showExportMenu={false}
+      />
 
-      <div className="library-content">
+      <div className="library-content" style={{ flex: 1, overflow: "auto" }}>
         <div className="image-grid">
           {images.map((img, i) => (
             <div
@@ -56,7 +70,7 @@ export default function LibraryView({ initialImages = defaultLibraryImages, dark
               className="image-item"
               onClick={() => openModal(img)}
               style={{
-                background: darkMode ? 'var(--card-bg-dark, #2a2a2a)' : 'var(--card-bg, #fff)'
+                background: darkMode ? "var(--card-bg-dark, #2a2a2a)" : "var(--card-bg, #fff)",
               }}
             >
               <img src={img} alt={`Library item ${i + 1}`} />
@@ -78,6 +92,19 @@ export default function LibraryView({ initialImages = defaultLibraryImages, dark
           </div>
         </div>
       )}
+
+      <SettingsPanel
+        isOpen={showSettings}
+        onClose={handleCloseSettings}
+        darkMode={darkMode}
+        theme={darkMode ? "dark" : "light"}
+        setTheme={toggleDarkMode}
+        currentUser={currentUser}
+        onSettingsChange={handleSettingsChange}
+        chats={chats || []}
+        onRestoreChat={onRestoreChat}
+        onPermanentlyDeleteChat={onPermanentlyDeleteChat}
+      />
     </div>
   );
 }

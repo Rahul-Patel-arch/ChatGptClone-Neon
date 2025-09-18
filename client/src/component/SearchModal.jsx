@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, X } from 'lucide-react';
-import './SearchModal.css';
+import React, { useState, useEffect, useRef } from "react";
+import { Search, X } from "lucide-react";
+import "./SearchModal.css";
 
-export default function SearchModal({ show, onClose, chats = [], onSelectChat, darkMode = false }) {
-  const [searchTerm, setSearchTerm] = useState('');
+export default function SearchModal({ show, onClose, chats = [], onSelectChat }) {
+  const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const inputRef = useRef(null);
 
@@ -22,28 +22,28 @@ export default function SearchModal({ show, onClose, chats = [], onSelectChat, d
         chats
           .slice()
           .filter(Boolean)
-          .sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+          .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
       );
       return;
     }
-    const results = chats.filter(chat => (chat?.title || '').toLowerCase().includes(term));
+    const results = chats.filter((chat) => (chat?.title || "").toLowerCase().includes(term));
     setSearchResults(results);
   }, [searchTerm, chats]);
 
   // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
       }
     };
 
     if (show) {
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [show, onClose]);
 
@@ -70,7 +70,11 @@ export default function SearchModal({ show, onClose, chats = [], onSelectChat, d
         <div className="search-results">
           {searchResults.length === 0 ? (
             <div className="search-empty">
-              <p className="mb-0">{searchTerm.trim() === '' ? 'No chats yet' : `No chats found matching "${searchTerm}"`}</p>
+              <p className="mb-0">
+                {searchTerm.trim() === ""
+                  ? "No chats yet"
+                  : `No chats found matching "${searchTerm}"`}
+              </p>
             </div>
           ) : (
             <div>
@@ -78,9 +82,12 @@ export default function SearchModal({ show, onClose, chats = [], onSelectChat, d
                 <div
                   key={chat.id}
                   className="search-result-item"
-                  onClick={() => { onSelectChat(chat.id); onClose(); }}
+                  onClick={() => {
+                    onSelectChat(chat.id);
+                    onClose();
+                  }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <Search size={16} className="text-muted" />
                     <span className="search-result-title">{chat.title}</span>
                     {chat.archived && <small className="search-result-meta">(archived)</small>}

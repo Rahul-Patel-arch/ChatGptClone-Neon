@@ -2,182 +2,257 @@ import React, { useState } from "react";
 import Sidebar from "../component/sidebar";
 import { Outlet, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import SettingsPanel from "../component/SettingsPanel/SettingsPanel";
+import useChats from "../hooks/useChats";
+import useResponsiveSidebar from "../hooks/useResponsiveSidebar";
+import useToast from "../hooks/useToast";
 
 export default function MainLayout(props) {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768); // Use <= instead of < for consistency
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth <= 768); // Start collapsed on mobile
-  
-  // Mobile-first responsive behavior
-  useEffect(() => {
-    const handleResize = () => {
-      const newIsMobile = window.innerWidth <= 768; // Use <= for consistency with CSS
-      const wasMobile = isMobile;
-      setIsMobile(newIsMobile);
-      
-      // Only auto-manage sidebar on screen size changes, not on initial load
-      // Allow manual toggle on mobile
-      if (!wasMobile && newIsMobile) {
-        // Switching from desktop to mobile - collapse sidebar
-        setSidebarCollapsed(true);
-      } else if (wasMobile && !newIsMobile && window.innerWidth > 1024) {
-        // Switching from mobile to desktop - expand sidebar on large screens
-        setSidebarCollapsed(false);
-      }
-    };
-    
-    // Don't call handleResize on initial mount to avoid overriding initial state
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isMobile]); // Remove sidebarCollapsed dependency
-  
+  const { isMobile, sidebarCollapsed, toggleSidebar, sidebarWidth } = useResponsiveSidebar();
+  // Toast notifications
+  const { toast: notification, show: showNotification } = useToast();
+
   // settingsOpen is handled inside ChatApp; MainLayout will dispatch an event to open settings there
-  const toggleSidebar = () => {
-    setSidebarCollapsed((prev) => {
-      const newValue = !prev;
-      return newValue;
-    });
-  };
 
   const location = useLocation();
   const hideSidebarOn = ["/login", "/signup", "/register"];
   const shouldShowSidebar = !hideSidebarOn.includes(location.pathname);
+  // Determine if the current route already mounts its own SettingsPanel (ChatApp, LibraryView)
+  const routeMountsOwnSettings =
+    location.pathname === "/" || location.pathname.startsWith("/library");
 
-  // Chats state lifted to layout so Sidebar, SettingsPanel and ChatApp share the same data
-  const CHAT_STORAGE_KEY = 'quantumchat_chats_v1';
-  const [chats, setChats] = useState([]);
-  const [activeChatId, setActiveChatId] = useState(null);
+  // Centralized chat state via hook: keeps behavior but simplifies this component
+  const {
+    chats,
+    setChats,
+    activeChatId,
+    setActiveChatId,
+    onNewChat,
+    onSelectChat,
+    onArchive: onArchiveChat,
+    onRestoreChat,
+    onPermanentlyDeleteChat,
+    onRename: onRenameChat,
+    onDelete: onDeleteChat,
+  } = useChats(props.currentUser?.email, { onInfo: showNotification });
 
-  // Load chats from localStorage once
+  // sidebarWidth now provided by useResponsiveSidebar
+
+  const [layoutSettingsOpen, setLayoutSettingsOpen] = useState(false);
+
+  // Listen for global settings open events when child route doesn't mount its own panel
   useEffect(() => {
+    if (routeMountsOwnSettings) return; // ChatApp/Library handle their own settings
+    const handler = () => setLayoutSettingsOpen(true);
+    window.addEventListener("open-settings", handler);
+    return () => window.removeEventListener("open-settings", handler);
+  }, [routeMountsOwnSettings]);
+
+  // Chat operations not covered by hook
+
+  // Share a chat from Sidebar (Recent Chats menu)
+  const handleShareChat = async (chatId) => {
     try {
-      const raw = localStorage.getItem(CHAT_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          setChats(parsed);
-          const firstActive = parsed.find(c => !c.archived);
-          if (firstActive) setActiveChatId(firstActive.id);
+      const chat = chats.find((c) => c.id === chatId);
+      if (!chat || !Array.isArray(chat.messages) || chat.messages.length === 0) {
+        showNotification("Nothing to share for this chat");
+        return;
+      }
+      const data = {
+        title: chat.title || "QuantumChat Conversation",
+        messages: chat.messages.map((m) => ({ role: m.role, text: m.text })),
+      };
+      const encoded = btoa(JSON.stringify(data));
+      const shareUrl = `${window.location.origin}/shared-chat?data=${encoded}`;
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: data.title,
+            url: shareUrl,
+            text: "Shared from QuantumChat",
+          });
+          showNotification("Shared successfully");
+          return;
+        } catch (err) {
+          if (err?.name === "AbortError") return; // user cancelled
         }
       }
+      await navigator.clipboard.writeText(shareUrl);
+      showNotification("Link copied to clipboard");
     } catch (e) {
-      console.warn('Failed to load chats from storage', e);
+      console.error("Share failed:", e);
+      showNotification("Failed to share this chat");
     }
-  }, []);
-
-  // Persist chats to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chats));
-    } catch (e) {
-      console.warn('Failed to save chats to storage', e);
-    }
-  }, [chats]);
-
-  const sidebarWidth = sidebarCollapsed ? (isMobile ? 0 : 60) : (isMobile ? 260 : 280);
-
-  // Chat operations exposed to children
-  const handleNewChat = () => {
-    const newChat = { id: Date.now().toString(), title: 'New Chat', createdAt: new Date().toISOString(), archived: false, messages: [] };
-    setChats(prev => [newChat, ...prev]);
-    setActiveChatId(newChat.id);
-  };
-
-  const handleSelectChat = (chatId) => {
-    setActiveChatId(chatId);
-  };
-
-  const handleArchiveChat = (chatId) => {
-    setChats(prev => prev.map(c => c.id === chatId ? { ...c, archived: true, archivedAt: new Date().toISOString() } : c));
-    if (activeChatId === chatId) setActiveChatId(null);
-  };
-
-  const handleRestoreChat = (chatId) => {
-    setChats(prev => prev.map(c => c.id === chatId ? { ...c, archived: false, archivedAt: undefined } : c));
-  };
-
-  const handlePermanentlyDeleteChat = (chatId) => {
-    setChats(prev => prev.filter(c => c.id !== chatId));
-    if (activeChatId === chatId) setActiveChatId(null);
-  };
-
-  const handleRenameChat = (chatId, newTitle) => {
-    setChats(prev => prev.map(c => c.id === chatId ? { ...c, title: newTitle } : c));
-  };
-
-  const handleDeleteChat = (chatId) => {
-    // same as permanently delete for now
-    handlePermanentlyDeleteChat(chatId);
   };
   return (
-    <div className="app-container" style={{ display: "flex", minHeight: "100vh" }}>
+    <div
+      className="app-container"
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+        background: props.darkMode ? "#0E1114" : "#F5F6FA",
+        transition: "background-color 0.3s ease",
+        width: "100vw",
+        margin: 0,
+        padding: 0,
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
+      {/* Background coverage layer - ensure no gaps */}
+      <div
+        className="sidebar-bg-cover"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          background: props.darkMode ? "#0E1114" : "#F5F6FA",
+          zIndex: -100,
+          margin: 0,
+          padding: 0,
+          transition: "background-color 0.3s ease",
+        }}
+      />
+
       {shouldShowSidebar && (
         <Sidebar
           {...props}
           isCollapsed={sidebarCollapsed}
           isMobile={isMobile}
           onToggle={toggleSidebar}
-          onSettings={() => window.dispatchEvent(new CustomEvent('open-settings'))}
+          onNotify={showNotification}
+          onSettings={() => window.dispatchEvent(new CustomEvent("open-settings"))}
           chats={chats}
           activeChatId={activeChatId}
-          onNewChat={handleNewChat}
-          onSelectChat={handleSelectChat}
-          onArchive={handleArchiveChat}
-          onRename={handleRenameChat}
-          onDelete={handleDeleteChat}
-          onShare={props.onShare}
+          onNewChat={onNewChat}
+          onSelectChat={onSelectChat}
+          onArchive={onArchiveChat}
+          onRename={onRenameChat}
+          onDelete={onDeleteChat}
+          onShare={handleShareChat}
         />
       )}
-      
+
       {/* Mobile overlay when sidebar is open - only covers content area, not sidebar */}
       {shouldShowSidebar && isMobile && !sidebarCollapsed && (
-        <div 
-          className="mobile-sidebar-overlay" 
+        <div
+          className="mobile-sidebar-overlay"
           onClick={toggleSidebar}
           style={{
-            position: 'fixed',
+            position: "fixed",
             top: 0,
-            left: '280px', // Start overlay after sidebar width
+            left: `${sidebarWidth}px`, // Start overlay after sidebar width
             right: 0,
             bottom: 0,
-            background: 'rgba(0,0,0,0.3)',
+            background: "rgba(0,0,0,0.3)",
             zIndex: 1070,
-            pointerEvents: 'auto'
+            pointerEvents: "auto",
           }}
         />
       )}
-      
+
       <div
         className={`main-content${shouldShowSidebar ? "" : " auth-page"} ${isMobile ? " mobile" : ""} ${sidebarCollapsed ? " sidebar-collapsed" : ""}`}
         style={{
           flex: 1,
+          marginTop: 0,
+          marginRight: 0,
+          marginBottom: 0,
           marginLeft: shouldShowSidebar ? (isMobile ? 0 : `${sidebarWidth}px`) : 0,
-          transition: 'margin-left 0.3s ease',
-          width: isMobile ? '100%' : 'auto',
-          position: 'relative',
-          '--sidebar-width': shouldShowSidebar ? (isMobile ? '0px' : `${sidebarWidth}px`) : '0px'
+          transition: "margin-left 0.3s ease, background-color 0.3s ease",
+          width: "100%",
+          position: "relative",
+          "--sidebar-width": shouldShowSidebar ? (isMobile ? "0px" : `${sidebarWidth}px`) : "0px",
+          display: "flex",
+          flexDirection: "column",
+          background: props.darkMode ? "#0E1114" : "#F5F6FA",
+          minHeight: "100vh",
+          willChange: "margin-left, background-color",
+          padding: 0,
+          borderLeft: "none" /* Remove border to fix gap */,
+          // Ensure no gaps during transition (but allow scroll on certain routes)
+          overflowX: "hidden",
+          overflowY:
+            location.pathname.startsWith("/checkout") || location.pathname.startsWith("/update")
+              ? "auto"
+              : "hidden",
+          isolation: "isolate",
         }}
       >
-        <Outlet context={{
-          currentUser: props.currentUser,
-          onLogout: props.onLogout,
-          chats,
-          setChats,
-          activeChatId,
-          setActiveChatId,
-          onNewChat: handleNewChat,
-          onSelectChat: handleSelectChat,
-          onArchive: handleArchiveChat,
-          onRestoreChat: handleRestoreChat,
-          onPermanentlyDeleteChat: handlePermanentlyDeleteChat,
-          onRename: handleRenameChat,
-          onDelete: handleDeleteChat,
-          // Add sidebar controls for ChatApp
-          sidebarCollapsed,
-          onToggleSidebar: toggleSidebar,
-          isMobile
-        }} />
+        {/* Header will be handled by individual pages that need it */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          <Outlet
+            context={{
+              currentUser: props.currentUser,
+              onLogout: props.onLogout,
+              chats,
+              setChats,
+              activeChatId,
+              setActiveChatId,
+              onNewChat,
+              onSelectChat,
+              onArchive: onArchiveChat,
+              onRestoreChat: onRestoreChat,
+              onPermanentlyDeleteChat,
+              onRename: onRenameChat,
+              onDelete: onDeleteChat,
+              // Add sidebar controls for ChatApp
+              sidebarCollapsed,
+              onToggleSidebar: toggleSidebar,
+              isMobile,
+              // Theme controls
+              darkMode: props.darkMode,
+              toggleDarkMode: props.toggleDarkMode,
+              themeMode: props.themeMode,
+              setThemeMode: props.setThemeMode,
+            }}
+          />
+        </div>
       </div>
+
+      {/* Notification Toast */}
+      {notification.show && (
+        <div
+          className="toast-notification"
+          style={{
+            position: "fixed",
+            bottom: "20px",
+            right: "20px",
+            background: "var(--surface)",
+            color: "var(--text)",
+            padding: "12px 16px",
+            borderRadius: "8px",
+            border: "1px solid var(--border)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            zIndex: 9999,
+            fontSize: "14px",
+            fontWeight: "500",
+            maxWidth: "300px",
+            animation: "fadeInUp 0.3s ease-out",
+          }}
+        >
+          {notification.message}
+        </div>
+      )}
+
       {/* SettingsPanel is owned by ChatApp so it has access to chats and handlers; MainLayout opens it via a window event */}
+      {/* Additionally, provide a layout-level SettingsPanel for routes without their own (e.g., /checkout, /update) */}
+      {!routeMountsOwnSettings && (
+        <SettingsPanel
+          isOpen={layoutSettingsOpen}
+          onClose={() => setLayoutSettingsOpen(false)}
+          darkMode={props.darkMode}
+          theme={props.themeMode || (props.darkMode ? "dark" : "light")}
+          setTheme={props.setThemeMode || props.toggleDarkMode}
+          currentUser={props.currentUser}
+          onSettingsChange={() => {}}
+          chats={chats}
+          onRestoreChat={onRestoreChat}
+          onPermanentlyDeleteChat={onPermanentlyDeleteChat}
+        />
+      )}
     </div>
   );
 }

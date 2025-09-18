@@ -1,0 +1,59 @@
+/* Dark Mode Fixes - Import after other CSS files */
+
+/* Ensure dark mode background colors are consistent */
+.dark {
+  --bg: #0e1114 !important;
+  --surface: #121417 !important;
+  --muted-surface: #16181a !important;
+  --text: #e6eef8 !important;
+  --muted-text: #b7c1ce !important;
+  --border: #22262a !important;
+}
+
+/* Force dark background on all major containers in dark mode */
+.dark .app-container,
+.dark .main-content,
+.dark .chat-area,
+.dark .chat-content,
+.dark .sidebar-bg-cover {
+  background-color: #0e1114 !important;
+}
+
+/* Remove any white backgrounds in dark mode */
+.dark .bg-white,
+.dark .bg-light,
+.dark .container,
+.dark .container-fluid {
+  background-color: #0e1114 !important;
+}
+
+/* Fix dark mode header */
+.dark .chat-header {
+  background-color: #0e1114 !important;
+  border-bottom: 1px solid #22262a !important;
+}
+
+/* Fix dark mode chat input container */
+.dark .chat-input-container {
+  background-color: #0e1114 !important;
+  border-top: 1px solid #22262a !important;
+}
+
+/* Fix dark mode sidebar */
+.dark .sidebar {
+  background-color: #1f2937 !important;
+  border-right: none !important;
+}
+
+/* Fix seams between layout elements in dark mode */
+.dark .sidebar-collapsed .chat-header,
+.dark .sidebar-collapsed .chat-content,
+.dark .sidebar-collapsed .chat-input-container {
+  border-left: none !important;
+}
+
+/* Dark mode pill styling */
+.dark .chat-input-pill {
+  background-color: #121417 !important;
+  border: 1px solid #22262a !important;
+}

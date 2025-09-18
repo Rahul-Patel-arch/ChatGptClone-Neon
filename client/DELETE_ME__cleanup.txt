@@ -1,0 +1,1 @@
+This temp file exists to verify write permissions to the workspace from the assistant. It will be removed after confirming file operations work.

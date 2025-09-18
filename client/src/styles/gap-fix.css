@@ -1,0 +1,40 @@
+/* Direct fix for sidebar-content gaps */
+
+/* Remove all borders that might cause gaps */
+.sidebar,
+.main-content,
+.chat-area,
+.chat-header,
+.chat-content,
+.chat-input-container {
+  border: none !important;
+}
+
+/* Leave main-content positioning to MainLayout inline styles to avoid double offset */
+
+/* Adjust for mobile */
+@media (max-width: 768px) {
+  .main-content,
+  .sidebar-collapsed .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* Fix dark mode backgrounds */
+.dark .main-content,
+.dark .chat-area,
+.dark .chat-content,
+.dark .chat-header,
+.dark .chat-input-container {
+  background-color: #0e1114 !important;
+}
+
+/* Fix light mode backgrounds */
+.main-content,
+.chat-area,
+.chat-content,
+.chat-header,
+.chat-input-container {
+  background-color: #f5f6fa !important;
+}

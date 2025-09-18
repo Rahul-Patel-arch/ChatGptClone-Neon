@@ -1,15 +1,21 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Check, X, Star, Crown } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
+import { AnimatePresence, motion } from "framer-motion";
+import { Check, X, Crown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import "./UpgradePlan.css";
 
-const UpgradePlan = ({ darkMode, onClose }) => {
+const UpgradePlan = ({ onClose }) => {
   const navigate = useNavigate();
   const handleClose = () => {
     if (onClose) return onClose();
     // If opened via route, navigate back to main chat
-    navigate('/');
+    navigate("/");
+  };
+
+  const goToCheckout = () => {
+    // Navigate to dedicated checkout page with plan details
+    navigate("/checkout?plan=pro&price=599&currency=₹");
   };
 
   return (
@@ -52,22 +58,30 @@ const UpgradePlan = ({ darkMode, onClose }) => {
                 className="plan-card free-plan"
               >
                 <div className="plan-header">
-                  <h3 className="plan-title">Free</h3>
-                  <p className="plan-description">For casual use</p>
+                  <h3 className="plan-title">QuantumChat Free</h3>
+                  <p className="plan-description">Perfect for getting started</p>
                 </div>
-                
+
                 <div className="plan-features">
                   <div className="feature-item">
                     <Check size={18} className="feature-icon" />
-                    <span>Access to GPT-3.5</span>
+                    <span>Basic AI conversations</span>
                   </div>
                   <div className="feature-item">
                     <Check size={18} className="feature-icon" />
-                    <span>Standard response speed</span>
+                    <span>10 messages per day</span>
                   </div>
                   <div className="feature-item">
                     <Check size={18} className="feature-icon" />
-                    <span>Limited features</span>
+                    <span>Standard response time</span>
+                  </div>
+                  <div className="feature-item">
+                    <Check size={18} className="feature-icon" />
+                    <span>Basic chat export</span>
+                  </div>
+                  <div className="feature-item">
+                    <Check size={18} className="feature-icon" />
+                    <span>Light & Dark themes</span>
                   </div>
                 </div>
 
@@ -91,41 +105,53 @@ const UpgradePlan = ({ darkMode, onClose }) => {
                 <div className="plan-header">
                   <h3 className="plan-title">
                     <Crown size={20} className="plan-icon" />
-                    Pro
+                    QuantumChat Pro
                   </h3>
-                  <p className="plan-description">For power users & professionals</p>
+                  <p className="plan-description">Unlock the full QuantumChat experience</p>
                 </div>
-                
+
                 <div className="plan-features">
                   <div className="feature-item">
                     <Check size={18} className="feature-icon" />
-                    <span>Access to GPT-4</span>
+                    <span>Unlimited conversations</span>
                   </div>
                   <div className="feature-item">
                     <Check size={18} className="feature-icon" />
-                    <span>Faster response speed</span>
+                    <span>Advanced AI models</span>
                   </div>
                   <div className="feature-item">
                     <Check size={18} className="feature-icon" />
-                    <span>Priority support</span>
+                    <span>Priority response speed</span>
                   </div>
                   <div className="feature-item">
                     <Check size={18} className="feature-icon" />
-                    <span>Advanced features</span>
+                    <span>Enhanced PDF export</span>
                   </div>
                   <div className="feature-item">
                     <Check size={18} className="feature-icon" />
-                    <span>Custom AI models</span>
+                    <span>Custom instructions</span>
+                  </div>
+                  <div className="feature-item">
+                    <Check size={18} className="feature-icon" />
+                    <span>File attachments</span>
+                  </div>
+                  <div className="feature-item">
+                    <Check size={18} className="feature-icon" />
+                    <span>Advanced search & archive</span>
+                  </div>
+                  <div className="feature-item">
+                    <Check size={18} className="feature-icon" />
+                    <span>24/7 priority support</span>
                   </div>
                 </div>
 
                 <div className="plan-footer">
                   <div className="plan-price">
-                    <span className="price-amount">₹1,299</span>
+                    <span className="price-amount">₹599</span>
                     <span className="price-period">/month</span>
                   </div>
-                  <button className="plan-button upgrade-button">
-                    Upgrade Now
+                  <button className="plan-button upgrade-button" onClick={goToCheckout}>
+                    Upgrade to Pro
                   </button>
                 </div>
               </motion.div>
@@ -134,7 +160,7 @@ const UpgradePlan = ({ darkMode, onClose }) => {
             {/* Footer Info */}
             <div className="upgrade-footer">
               <p className="footer-text">
-                All plans include a 7-day free trial. Cancel anytime.
+                ✨ Start your QuantumChat Pro journey today. Cancel anytime with just one click.
               </p>
             </div>
           </div>

@@ -1,0 +1,29 @@
+/* No-gap fixes - Import after other CSS files */
+
+/* Ensure no gap between sidebar and content in all modes */
+/* Keep neutral to avoid conflicting with MainLayout-controlled offsets */
+.main-content {
+  padding-left: 0 !important;
+}
+
+/* Fix specific dark mode gap */
+.dark-mode.chat-area,
+.dark-mode .chat-content,
+.dark-mode .chat-header,
+.dark-mode .chat-input-container {
+  border-left: 1px solid #22262a !important;
+}
+
+/* In collapsed sidebar mode */
+/* Collapsed sidebar specific borders removed to prevent visual gaps */
+
+/* Prevent any gaps with additional coverage */
+/* Remove coverage layers that could introduce z-index artifacts */
+
+/* Force exact alignment between sidebar and content */
+/* Let MainLayout own the horizontal offset of main-content */
+
+/* Fix on mobile */
+@media (max-width: 768px) {
+  /* No explicit margin-left rules here */
+}

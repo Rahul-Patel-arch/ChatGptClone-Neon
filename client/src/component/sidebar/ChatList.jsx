@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Check, X } from 'lucide-react';
-import ChatItemMenu from './ChatItemMenu';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from "react";
+import { MoreVertical } from "lucide-react";
+import ChatItemMenu from "./ChatItemMenu";
+import { useNavigate } from "react-router-dom";
 
 // Chat list now only renders in expanded mode (ChatGPT style: no recent chats in collapsed sidebar)
 export default function ChatList({
@@ -12,14 +12,14 @@ export default function ChatList({
   onArchive,
   onRename,
   onDelete,
-  onShare
+  onShare,
 }) {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [editingChatId, setEditingChatId] = useState(null);
-  const [editingTitle, setEditingTitle] = useState('');
+  const [editingTitle, setEditingTitle] = useState("");
   const editInputRef = useRef(null);
   const navigate = useNavigate();
-  
+
   // Focus the input when entering edit mode
   useEffect(() => {
     if (editingChatId && editInputRef.current) {
@@ -41,7 +41,7 @@ export default function ChatList({
   const handleChatClick = (chatId) => {
     if (editingChatId) return; // Don't navigate while editing
     if (onSelectChat) onSelectChat(chatId);
-    navigate('/');
+    navigate("/");
   };
 
   const handleStartRename = (chatId, currentTitle) => {
@@ -55,19 +55,19 @@ export default function ChatList({
       onRename(editingChatId, editingTitle.trim());
     }
     setEditingChatId(null);
-    setEditingTitle('');
+    setEditingTitle("");
   };
 
   const handleCancelRename = () => {
     setEditingChatId(null);
-    setEditingTitle('');
+    setEditingTitle("");
   };
 
   const handleRenameKeyDown = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleSaveRename();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       e.preventDefault();
       handleCancelRename();
     }
@@ -81,14 +81,14 @@ export default function ChatList({
           const isActive = activeChatId === chat.id;
           const isMenuOpen = openMenuId === chat.id;
           const isEditing = editingChatId === chat.id;
-          
+
           return (
             <div
               key={chat.id || i}
-              className={`chat-item with-actions ${isActive ? 'active' : ''} ${isMenuOpen ? 'menu-open' : ''} ${isEditing ? 'editing' : ''}`}
+              className={`chat-item with-actions ${isActive ? "active" : ""} ${isMenuOpen ? "menu-open" : ""} ${isEditing ? "editing" : ""}`}
             >
               {isEditing ? (
-                // Inline edit mode
+                // Inline edit mode - confirm with Enter, cancel with Escape or blur
                 <div className="chat-rename-inline">
                   <input
                     ref={editInputRef}
@@ -96,26 +96,10 @@ export default function ChatList({
                     value={editingTitle}
                     onChange={(e) => setEditingTitle(e.target.value)}
                     onKeyDown={handleRenameKeyDown}
-                    onBlur={handleSaveRename}
+                    onBlur={handleCancelRename}
                     className="chat-rename-input"
-                    placeholder="Enter chat name..."
+                    placeholder="Name this chat"
                   />
-                  <div className="chat-rename-actions">
-                    <button
-                      onClick={handleSaveRename}
-                      className="chat-rename-btn save"
-                      title="Save (Enter)"
-                    >
-                      <Check size={14} />
-                    </button>
-                    <button
-                      onClick={handleCancelRename}
-                      className="chat-rename-btn cancel"
-                      title="Cancel (Escape)"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
                 </div>
               ) : (
                 // Normal display mode
@@ -132,7 +116,7 @@ export default function ChatList({
                       className="chat-action-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenMenuId(prev => prev === chat.id ? null : chat.id);
+                        setOpenMenuId((prev) => (prev === chat.id ? null : chat.id));
                       }}
                       aria-haspopup="true"
                       aria-expanded={isMenuOpen}
@@ -146,7 +130,12 @@ export default function ChatList({
                         onRename={() => handleStartRename(chat.id, chat.title)}
                         onShare={() => onShare && onShare(chat.id)}
                         onArchive={() => onArchive && onArchive(chat.id)}
-                        onDelete={() => onDelete && onDelete(chat.id)}
+                        onDelete={() => {
+                          const ok = window.confirm(
+                            "Delete this chat permanently? This cannot be undone."
+                          );
+                          if (ok && onDelete) onDelete(chat.id);
+                        }}
                         onClose={() => setOpenMenuId(null)}
                       />
                     )}
@@ -157,7 +146,6 @@ export default function ChatList({
           );
         })}
       </div>
-      
     </div>
   );
 }
