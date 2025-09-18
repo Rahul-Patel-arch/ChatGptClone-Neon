@@ -1,6 +1,83 @@
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "./styles/theme.css";
+@import "./styles/chat-input-fixes.css"; /* Emergency layout fixes */
+@import "./styles/dark-mode-fixes.css"; /* Dark mode specific fixes */
+@import "./styles/gap-fix.css"; /* Direct fix for sidebar-content gaps */
+@import "./styles/chat-area-fix.css"; /* Fix for chat-area phantom sidebar space */
 
-@import 'bootstrap/dist/css/bootstrap.min.css';
-@import './styles/theme.css';
+/* CRITICAL: Force background on all root elements to prevent white areas */
+html {
+  background: #f5f6fa !important;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #f5f6fa !important;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+#root {
+  background: #f5f6fa !important;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Dark mode overrides */
+html.dark,
+body.dark,
+#root.dark,
+.dark html,
+.dark body,
+.dark #root {
+  background: #0e1114 !important;
+}
+
+/* Force background on all major containers */
+.app-container,
+.main-content {
+  background: #f5f6fa !important;
+}
+
+.dark .app-container,
+.dark .main-content {
+  background: #0e1114 !important;
+}
+
+/* Style inheritance for chat containers - handled in chat-input-fixes.css */
+
+/* Override any Bootstrap background classes */
+.bg-white,
+.bg-light {
+  background: #f5f6fa !important;
+}
+
+.dark .bg-white,
+.dark .bg-light {
+  background: #0e1114 !important;
+}
+
+/* Force background on any div that might be causing the white area */
+div {
+  background-color: inherit;
+}
+
+/* Specific override for any container that might have white background */
+.container,
+.container-fluid,
+.row,
+.col,
+[class*="col-"] {
+  background: transparent !important;
+}
 
 /* Modal animations */
 @keyframes modalFadeIn {
@@ -45,7 +122,9 @@
 }
 
 .transition-colors {
-  transition: color 0.2s ease, background-color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 /* Typing Animation Styles */
@@ -78,7 +157,9 @@
 }
 
 @keyframes typing {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: scale(0);
     opacity: 0.5;
   }
@@ -89,8 +170,14 @@
 }
 
 @keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
 }
 
 /* Message Action Buttons */
@@ -117,18 +204,30 @@
   background: transparent;
   color: var(--muted-text);
   cursor: pointer;
-  transition: background 0.18s ease, transform 120ms ease;
+  transition:
+    background 0.18s ease,
+    transform 120ms ease;
   padding: 6px;
   border: 1px solid transparent;
 }
 
+/* Smaller variant for messages that already include per-block copy buttons */
+.msg-action-btn.small {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  padding: 4px;
+}
+
 .msg-action-btn:hover {
-  background: rgba(0,0,0,0.04);
+  background: rgba(0, 0, 0, 0.04);
   color: var(--text);
   transform: translateY(-2px);
 }
 
-.msg-action-btn:active { transform: translateY(0); }
+.msg-action-btn:active {
+  transform: translateY(0);
+}
 
 /* Specific button styling */
 .msg-action-btn[title="Read aloud"]:hover {
@@ -171,18 +270,21 @@
   }
 }
 
-/* Chat layout: make header sticky and messages scrollable */
+/* CHAT LAYOUT RULES MOVED TO chat-input-fixes.css 
+   Following rules are commented out to avoid conflicts with chat-input-fixes.css
+   
 .chat-area {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  height: 100dvh; /* Dynamic viewport height for mobile */
+  height: 100dvh;
   width: 100%;
   position: relative;
+  overflow: hidden;
 }
 
 .chat-area.mobile {
-  margin-left: 0 !important; /* Override any sidebar margin on mobile */
+  margin-left: 0 !important;
   width: 100vw;
   left: 0;
 }
@@ -205,13 +307,15 @@
 .chat-content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  overflow-x: hidden;
+  padding: 0;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Sticky bottom input container */
 .chat-input-container {
   position: sticky;
   bottom: 0;
@@ -219,34 +323,46 @@
   border-top: 1px solid var(--border);
   padding: 12px 16px;
   z-index: 45;
-  /* Add safe area padding for mobile devices */
   padding-bottom: max(12px, env(safe-area-inset-bottom));
   width: 100%;
+  flex-shrink: 0;
 }
+*** END OF COMMENTED RULES ***
+*/
 
-/* make room so last message isn't hidden behind the input */
+/* make room so last message isn't hidden behind the input - MOVED TO chat-input-fixes.css */
+/* 
 .chat-content .chat-messages-container {
-  padding-bottom: max(92px, calc(92px + env(safe-area-inset-bottom))); /* Safe area aware */
+  padding-bottom: max(92px, calc(92px + env(safe-area-inset-bottom)));
 }
+*/
 
-/* Responsive Design Enhancements */
+/* RESPONSIVE CHAT RULES MOVED TO chat-input-fixes.css */
+/* 
 @media (max-width: 768px) {
   .chat-header {
     padding: 8px 12px;
     min-height: 56px;
+    z-index: 70;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
   
   .chat-content {
-    padding: 12px;
+    padding: 0;
   }
   
   .chat-input-container {
     padding: 8px 12px;
     padding-bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 70;
+    box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
   }
   
   .chat-content .chat-messages-container {
     padding-bottom: max(80px, calc(80px + env(safe-area-inset-bottom)));
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 12px;
   }
 }
 
@@ -265,6 +381,7 @@
     padding-bottom: max(6px, env(safe-area-inset-bottom));
   }
 }
+*/
 
 /* Improve mobile touch targets */
 @media (max-width: 768px) {
@@ -273,33 +390,46 @@
     min-height: 44px;
     padding: 8px;
   }
-  
+
   /* Make buttons easier to tap on mobile */
-  button, .btn {
+  button,
+  .btn {
     min-height: 44px;
     padding: 8px 16px;
   }
-  
+
+  /* Compact buttons inside our modals (Forgot/Reset/etc.) */
+  .modal-content-wrapper .btn,
+  .modal-content .btn {
+    min-height: 36px !important;
+    padding: 6px 12px !important;
+    line-height: 1.25 !important;
+    font-size: 0.95rem;
+    border-radius: 8px;
+  }
+
   /* Larger tap targets for mobile */
   .social-button {
     width: 48px;
     height: 48px;
   }
-  
+
   /* Improve text readability on mobile */
   body {
     font-size: 16px; /* Prevents zoom on iOS */
     line-height: 1.5;
   }
-  
+
   /* Better input handling */
-  input, textarea {
+  input,
+  textarea {
     font-size: 16px; /* Prevents zoom on iOS */
     border-radius: 8px;
   }
-  
+
   /* Touch-friendly modal close buttons */
-  .modal .close, .modal-header .close {
+  .modal .close,
+  .modal-header .close {
     min-width: 44px;
     min-height: 44px;
     padding: 8px;
@@ -308,18 +438,21 @@
 
 /* Safe area support for modern mobile devices */
 @supports (padding: max(0px)) {
+  /* CHAT AREA SAFE AREA MOVED TO chat-input-fixes.css */
+  /*
   .chat-area {
     height: 100vh;
     height: 100dvh;
     padding-top: env(safe-area-inset-top);
   }
-  
+  */
+
   .sidebar {
     padding-left: env(safe-area-inset-left);
     height: 100vh;
     height: 100dvh;
   }
-  
+
   .auth-container {
     min-height: 100vh;
     min-height: 100dvh;
@@ -335,13 +468,14 @@
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
-  
+
   /* Prevent horizontal scrolling */
-  html, body {
+  html,
+  body {
     overflow-x: hidden;
     width: 100%;
   }
-  
+
   /* Touch feedback */
   button:active,
   .btn:active,
@@ -349,9 +483,11 @@
     transform: scale(0.98);
     transition: transform 0.1s ease;
   }
-  
+
   /* Prevent text selection on UI elements */
-  .sidebar, .chat-header, .modal-header {
+  .sidebar,
+  .chat-header,
+  .modal-header {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -366,7 +502,7 @@
     --text: #000000;
     --bg: #ffffff;
   }
-  
+
   .dark {
     --border: #ffffff;
     --text: #ffffff;
@@ -381,12 +517,61 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  
+
   .typing-indicator span {
     animation: none;
   }
-  
+
   .typing-cursor {
     animation: none;
   }
+}
+
+/* --- Code block spacing + header compactness --- */
+.msg pre,
+.msg code,
+.code-pre-wrapper {
+  margin: 0 !important;
+}
+
+.code-block-container {
+  margin: 8px 0 !important; /* modest vertical spacing only */
+}
+
+.code-block-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 4px 8px !important; /* tighter */
+  font-size: 12px !important;
+  line-height: 1.1 !important; /* tighter */
+  position: relative !important;
+}
+
+.code-language {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+}
+
+.code-copy-btn {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 4px !important;
+  line-height: 1 !important;
+}
+
+.code-copied-badge {
+  font-size: 10px !important;
+  color: #22c55e !important;
+  background: rgba(34, 197, 94, 0.12) !important;
+  border: 1px solid rgba(34, 197, 94, 0.4) !important;
+  padding: 0 6px !important;
+  border-radius: 999px !important;
+  line-height: 18px !important;
+  height: 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
 }

@@ -1,70 +1,89 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Sun, Moon, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useGoogleLogin } from '@react-oauth/google';
-import axios from 'axios';
-import emailjs from '@emailjs/browser';
-import quantumIcon from '../assets/quantum-chat-icon.png';
-import SocialLoginModal from './SocialLoginModal';
-import '../styles/animatedAuth.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Sun, Moon, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { useGoogleLogin } from "@react-oauth/google";
+import axios from "axios";
+import emailjs from "@emailjs/browser";
+import { sendTemplatedEmail, buildCommonParams } from "../utils/emailTemplates";
+import quantumIcon from "../assets/quantum-chat-icon.png";
+import SocialLoginModal from "./SocialLoginModal";
+import SocialAuthModal from "./SocialAuthModal";
+import "../styles/animatedAuth.css";
+import ResetPasswordModal from "./ResetPasswordModal";
+import { createStatelessResetToken, PASSWORD_RESET_TTL_MINUTES } from "../utils/passwordReset";
 
 const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
   const navigate = useNavigate();
   const [isSignIn, setIsSignIn] = useState(true);
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeProvider, setActiveProvider] = useState('');
+  const [activeProvider, setActiveProvider] = useState("");
+  const [modalType, setModalType] = useState(""); // 'social-login' or 'social-auth'
   const [rememberMe, setRememberMe] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
 
   // Initialize container after a slight delay for animation
   useEffect(() => {
     const timer = setTimeout(() => {
-      const container = document.getElementById('auth-container');
+      const container = document.getElementById("auth-container");
       if (container) {
-        container.classList.add('sign-in');
+        container.classList.add("sign-in");
       }
     }, 200);
-    
+
     return () => clearTimeout(timer);
+  }, []);
+
+  // Show password reset success banner if coming from reset flow
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("reset_password_success")) {
+        setIsSignIn(true);
+        setSuccess("✅ Password reset successful. Please sign in with your new password.");
+        sessionStorage.removeItem("reset_password_success");
+        // Auto fade message after a few seconds
+        setTimeout(() => setSuccess(""), 6000);
+      }
+    } catch (error) {
+      console.error("Error handling URL params:", error);
+    }
   }, []);
 
   // Toggle between sign-in and sign-up with improved transitions
   const toggle = () => {
-    setError('');
-    setSuccess('');
-    const container = document.getElementById('auth-container');
+    setError("");
+    setSuccess("");
+    const container = document.getElementById("auth-container");
     if (container) {
       // Apply transition class to indicate animation in progress
-      container.classList.add('transitioning');
-      
+      container.classList.add("transitioning");
+
       // Clear all form fields when toggling
       if (isSignIn) {
         // When switching to sign-up, clear only password
-        setPassword('');
-        setConfirmPassword('');
+        setPassword("");
+        setConfirmPassword("");
       } else {
         // When switching to sign-in, clear only password
-        setPassword('');
+        setPassword("");
       }
-      
+
       // Use timeout to allow CSS transitions to complete
       setTimeout(() => {
-        container.classList.toggle('sign-in');
-        container.classList.toggle('sign-up');
+        container.classList.toggle("sign-in");
+        container.classList.toggle("sign-up");
         setIsSignIn(!isSignIn);
-        
+
         // Remove transition class after animation completes
         setTimeout(() => {
-          container.classList.remove('transitioning');
+          container.classList.remove("transitioning");
         }, 1000);
       }, 300);
     }
@@ -73,12 +92,12 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
   // Handle sign-in
   const handleSignIn = (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     setIsLoading(true);
 
     if (!email || !password) {
-      setError('Please fill in all fields');
+      setError("Please fill in all fields");
       setIsLoading(false);
       return;
     }
@@ -86,30 +105,34 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
+      setError("Please enter a valid email address");
       setIsLoading(false);
       return;
     }
 
     // Demo login - in a real app this would validate against a backend
     setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem('chatapp_users')) || [];
-      const foundUser = users.find(user => user.email === email && user.password === password);
+      const users = JSON.parse(localStorage.getItem("chatapp_users")) || [];
+      const foundUser = users.find((user) => user.email === email && user.password === password);
 
       if (foundUser) {
-        setSuccess('Login successful! Redirecting...');
+        setSuccess("Login successful! Redirecting...");
         setTimeout(() => {
           onLogin({
             email: foundUser.email,
-            name: foundUser.username || 'User',
+            name: foundUser.username || "User",
             id: foundUser.id,
-            preferences: foundUser.preferences || {}
+            preferences: foundUser.preferences || {},
           });
           // navigate to root so App mounts protected routes
-          try { navigate('/', { replace: true }); } catch (e) { /* noop if navigate unavailable */ }
+          try {
+            navigate("/", { replace: true });
+          } catch (e) {
+            console.warn("Navigation failed:", e);
+          }
         }, 1000);
       } else {
-        setError('Invalid credentials. Please try again.');
+        setError("Invalid credentials. Please try again.");
       }
       setIsLoading(false);
     }, 1500);
@@ -118,12 +141,12 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
   // Handle sign-up
   const handleSignUp = (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     setIsLoading(true);
 
     if (!username || !email || !password || !confirmPassword) {
-      setError('Please fill in all fields');
+      setError("Please fill in all fields");
       setIsLoading(false);
       return;
     }
@@ -131,38 +154,38 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
+      setError("Please enter a valid email address");
       setIsLoading(false);
       return;
     }
 
     // Password validation
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError("Password must be at least 6 characters long");
       setIsLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       setIsLoading(false);
       return;
     }
 
     // Terms validation
     if (!agreeTerms) {
-      setError('Please agree to the Terms of Service');
+      setError("Please agree to the Terms of Service");
       setIsLoading(false);
       return;
     }
 
     // Demo registration - in a real app this would register with a backend
     setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem('chatapp_users')) || [];
-      
+      const users = JSON.parse(localStorage.getItem("chatapp_users")) || [];
+
       // Check if user already exists
-      if (users.some(user => user.email === email)) {
-        setError('An account with this email already exists');
+      if (users.some((user) => user.email === email)) {
+        setError("An account with this email already exists");
         setIsLoading(false);
         return;
       }
@@ -175,45 +198,74 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
         password,
         createdAt: new Date().toISOString(),
         preferences: {
-          theme: darkMode ? 'dark' : 'light',
-          language: 'en',
-          notifications: true
-        }
+          theme: darkMode ? "dark" : "light",
+          language: "en",
+          notifications: true,
+        },
       };
 
       users.push(newUser);
-      localStorage.setItem('chatapp_users', JSON.stringify(users));
+      localStorage.setItem("chatapp_users", JSON.stringify(users));
 
-      setSuccess('Account created successfully!');
-      
-      // Auto switch to login
+      setSuccess("Account created successfully! Logging you in...");
+
+      // Fire-and-forget welcome email (non-blocking)
+      try {
+        const params = {
+          ...buildCommonParams({
+            email: newUser.email,
+            username: newUser.username || newUser.email.split("@")[0],
+          }),
+          welcome_title: "Welcome to QuantumChat",
+          welcome_message: "Thanks for signing up! You can now start chatting.",
+        };
+        // Do not await to keep UI snappy
+        sendTemplatedEmail("welcome", params).then((res) => {
+          if (!res?.ok && !res?.skipped) {
+            console.warn("Welcome email failed", res);
+          }
+        });
+      } catch (err) {
+        console.warn("Welcome email trigger error (ignored)", err);
+      }
+
+      // Auto login after successful registration
       setTimeout(() => {
-        toggle();
-        setEmail(email);
-        setPassword('');
-        setSuccess('Please sign in with your new account');
+        setIsLoading(false);
+        onLogin({
+          email: newUser.email,
+          name: newUser.username,
+          id: newUser.id,
+          preferences: newUser.preferences,
+        });
+        // Navigate to main app
+        try {
+          navigate("/", { replace: true });
+        } catch (e) {
+          console.warn("Navigation failed:", e);
+        }
       }, 1500);
-      
-      setIsLoading(false);
     }, 1500);
   };
 
   // Demo credentials removed: this app no longer auto-fills demo login info
-  
+
   // Social login handlers
   const handleSocialLogin = (provider) => {
     setActiveProvider(provider);
     setIsModalOpen(true);
-    setError('');
-    setSuccess('');
+    // Use new SocialAuthModal for Microsoft and Apple, old SocialLoginModal for Google
+    setModalType(provider === "Google" ? "social-login" : "social-auth");
+    setError("");
+    setSuccess("");
   };
 
-  const handleSocialLoginSuccess = (provider) => {
+  const handleSocialLoginSuccess = (provider, userData = null) => {
     setIsModalOpen(false);
     setSuccess(`Successfully authenticated with ${provider}!`);
-    
-    // Create or update social login user
-    const socialUser = {
+
+    // Use provided user data or create default social user
+    const socialUser = userData || {
       id: Date.now(),
       email: `user@${provider.toLowerCase()}.com`,
       username: `${provider} User`,
@@ -222,21 +274,21 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
       lastLogin: new Date().toISOString(),
       isActive: true,
       preferences: {
-        theme: 'system',
-        language: 'en',
-        notifications: true
-      }
+        theme: "system",
+        language: "en",
+        notifications: true,
+      },
     };
 
     // Store social user info
-    const users = JSON.parse(localStorage.getItem('chatapp_users')) || [];
-    const existingSocialUser = users.find(user => user.provider === provider);
-    
+    const users = JSON.parse(localStorage.getItem("chatapp_users")) || [];
+    const existingSocialUser = users.find((user) => user.provider === provider);
+
     if (!existingSocialUser) {
       users.push(socialUser);
-      localStorage.setItem('chatapp_users', JSON.stringify(users));
+      localStorage.setItem("chatapp_users", JSON.stringify(users));
     }
-    
+
     setTimeout(() => {
       onLogin({
         email: socialUser.email,
@@ -244,9 +296,13 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
         id: socialUser.id,
         provider: provider,
         preferences: socialUser.preferences,
-        lastLogin: socialUser.lastLogin
+        lastLogin: socialUser.lastLogin,
       });
-      try { navigate('/', { replace: true }); } catch (e) {}
+      try {
+        navigate("/", { replace: true });
+      } catch (e) {
+        console.warn("Navigation failed:", e);
+      }
     }, 1500);
   };
 
@@ -255,58 +311,92 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
     onSuccess: async (tokenResponse) => {
       try {
         setIsLoading(true);
-        setError('');
-        setSuccess('Authenticating with Google...');
+        setError("");
+        setSuccess("Authenticating with Google...");
 
-        // Fetch user info from Google
-        const res = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+        // Fetch user info from Google (URL can be overridden via env)
+        const GOOGLE_USERINFO_URL =
+          import.meta.env.VITE_GOOGLE_USERINFO_URL || "https://www.googleapis.com/oauth2/v3/userinfo";
+        const res = await axios.get(GOOGLE_USERINFO_URL, {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
         const profile = res.data;
 
         // Create or update local user record
-        const users = JSON.parse(localStorage.getItem('chatapp_users')) || [];
-        let existing = users.find(u => u.email === profile.email);
+        const users = JSON.parse(localStorage.getItem("chatapp_users")) || [];
+        let existing = users.find((u) => u.email === profile.email);
         let userToLogin;
-        
+
         if (!existing) {
           const newUser = {
             id: profile.sub || Date.now(),
             email: profile.email,
-            username: profile.name || profile.email.split('@')[0],
-            provider: 'Google',
+            username: profile.name || profile.email.split("@")[0],
+            provider: "Google",
             createdAt: new Date().toISOString(),
             lastLogin: new Date().toISOString(),
             isActive: true,
-            preferences: { theme: 'system', language: 'en', notifications: true }
+            preferences: { theme: "system", language: "en", notifications: true },
           };
           users.push(newUser);
-          localStorage.setItem('chatapp_users', JSON.stringify(users));
+          localStorage.setItem("chatapp_users", JSON.stringify(users));
           userToLogin = newUser;
+
+          // Send welcome email for first-time OAuth users (non-blocking)
+          try {
+            const params = {
+              ...buildCommonParams({
+                email: newUser.email,
+                username: newUser.username || newUser.email.split("@")[0],
+              }),
+              provider: "Google",
+              welcome_title: "Welcome to QuantumChat",
+              welcome_message: "Your Google account is now connected. Enjoy QuantumChat!",
+            };
+            sendTemplatedEmail("welcome", params).then((res) => {
+              if (!res?.ok && !res?.skipped) {
+                console.warn("Welcome email (OAuth) failed", res);
+              }
+            });
+          } catch (err) {
+            console.warn("Welcome email trigger error (OAuth, ignored)", err);
+          }
         } else {
           existing.lastLogin = new Date().toISOString();
-          localStorage.setItem('chatapp_users', JSON.stringify(users.map(u => u.id === existing.id ? existing : u)));
+          localStorage.setItem(
+            "chatapp_users",
+            JSON.stringify(users.map((u) => (u.id === existing.id ? existing : u)))
+          );
           userToLogin = existing;
         }
 
         setTimeout(() => {
-          onLogin({ email: userToLogin.email, name: userToLogin.username || userToLogin.name || 'User', id: userToLogin.id, preferences: userToLogin.preferences || {} });
-          try { navigate('/', { replace: true }); } catch (e) {}
+          onLogin({
+            email: userToLogin.email,
+            name: userToLogin.username || userToLogin.name || "User",
+            id: userToLogin.id,
+            preferences: userToLogin.preferences || {},
+          });
+          try {
+            navigate("/", { replace: true });
+          } catch (e) {
+            console.warn("Navigation failed:", e);
+          }
         }, 800);
       } catch (err) {
-        console.error('Google login failed', err);
-        setError('Google login failed. Please try again.');
-        setSuccess('');
+        console.error("Google login failed", err);
+        setError("Google login failed. Please try again.");
+        setSuccess("");
         setIsLoading(false);
       }
     },
     onError: (err) => {
-      console.error('Google OAuth error', err);
-      setError('Google login failed. Please try again.');
+      console.error("Google OAuth error", err);
+      setError("Google login failed. Please try again.");
       setIsLoading(false);
     },
     // Configuration to handle COOP issues
-    ux_mode: 'popup',
+    ux_mode: "popup",
     select_account: true,
     // Additional configuration for COOP handling
     hosted_domain: undefined,
@@ -316,51 +406,89 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
   // Forgot password / Reset modals implemented inline to avoid creating new files
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
+  const [resetParams, setResetParams] = useState({ email: "", token: "" });
 
-  const handleForgotSubmit = (e) => {
+  const handleForgotSubmit = async (e) => {
     e.preventDefault();
-    setError(''); setSuccess('');
-    if (!email) { setError('Please enter your email'); return; }
-    const users = JSON.parse(localStorage.getItem('chatapp_users')) || [];
-    const found = users.find(u => u.email === email);
-    // Always show a generic message to avoid user enumeration
-    setSuccess('If an account with that email exists, a reset link has been sent.');
-    setTimeout(() => setShowForgotPassword(false), 1800);
-
-    if (found) {
-      // Save a simple reset token in localStorage (demo only)
-      const token = Math.random().toString(36).slice(2, 12);
-      const resetStore = JSON.parse(localStorage.getItem('chatapp_password_resets') || '{}');
-      resetStore[found.email] = { token, createdAt: Date.now() };
-      localStorage.setItem('chatapp_password_resets', JSON.stringify(resetStore));
-      // open reset modal to simulate link click
-      setResetEmail(found.email);
-      // Send forgot-password email via EmailJS (demo template)
-      try {
-        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-        const templateId = import.meta.env.VITE_EMAILJS_FORGOT_PASSWORD_TEMPLATE_ID;
-        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-        if (serviceId && templateId && publicKey) {
-          const resetLink = `${window.location.origin}${window.location.pathname}?email=${encodeURIComponent(found.email)}&reset_token=${token}`;
-          emailjs.send(serviceId, templateId, { username: found.username || found.email.split('@')[0], to_email: found.email, reset_link: resetLink }, publicKey)
-            .then(() => console.log('Forgot password email queued'))
-            .catch(err => console.error('Forgot email failed', err));
-        }
-      } catch (e) {
-        console.error('EmailJS error', e);
+    setError("");
+    setSuccess("");
+    if (!email) {
+      setError("Please enter your email");
+      return;
+    }
+    const users = JSON.parse(localStorage.getItem("chatapp_users")) || [];
+    const foundUser = users.find((u) => u.email === email);
+    setSuccess(
+      `If an account exists, a reset link (valid ${PASSWORD_RESET_TTL_MINUTES} mins) has been sent.`
+    );
+    setTimeout(() => setShowForgotPassword(false), 1600);
+    if (!foundUser) return;
+    const statelessToken = await createStatelessResetToken(foundUser.email);
+    try {
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_FORGOT_PASSWORD_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      const resetLink = `${window.location.origin}/reset-password?email=${encodeURIComponent(foundUser.email)}&prt=${encodeURIComponent(statelessToken)}`;
+      if (serviceId && templateId && publicKey) {
+        emailjs
+          .send(
+            serviceId,
+            templateId,
+            {
+              username: foundUser.username || foundUser.email.split("@")[0],
+              to_email: foundUser.email,
+              reset_link: resetLink,
+              stateless_token: statelessToken,
+            },
+            publicKey
+          )
+          .then(() => {
+            /* eslint-disable no-undef */
+            if (typeof process !== "undefined" && process.env?.NODE_ENV === "development") {
+              console.log("Reset email sent");
+              /* eslint-enable no-undef */
+            }
+          })
+          .catch((err) => console.error("Reset email error", err));
+      } else {
+        console.warn("EmailJS not configured; simulated link:", resetLink);
       }
-      setTimeout(() => setShowResetModal(true), 500);
+    } catch (e) {
+      console.error("EmailJS error", e);
     }
   };
 
-  const handleResetComplete = () => {
+  // Detect token in URL on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailParam = urlParams.get("email");
+    const prt = urlParams.get("prt");
+    if (emailParam && prt) {
+      setResetParams({ email: emailParam, token: "" });
+      setShowResetModal(true);
+    }
+  }, []);
+
+  const handleResetSuccess = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("email");
+    url.searchParams.delete("prt");
+    window.history.replaceState({}, document.title, url.pathname + url.search);
     setShowResetModal(false);
-    setSuccess('Password reset complete. Please sign in.');
+    setSuccess("Password reset successful. Please sign in.");
+    if (!isSignIn) toggle();
+  };
+
+  const handleResetClose = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("email");
+    url.searchParams.delete("prt");
+    window.history.replaceState({}, document.title, url.pathname + url.search);
+    setShowResetModal(false);
   };
 
   return (
-    <div className={`auth-page ${darkMode ? 'dark' : 'light'}`}>
+    <div className={`auth-page ${darkMode ? "dark" : "light"}`}>
       {/* Theme toggle button */}
       <div className="theme-toggle">
         <button
@@ -387,13 +515,19 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
                 </div>
 
                 {error && <div className="error-message">{error}</div>}
-                {success && <div className="success-message">{success}</div>}
+                {success && (
+                  <div
+                    className={`success-message ${success.includes("Password reset successful") ? "reset-success" : ""}`}
+                  >
+                    {success}
+                  </div>
+                )}
 
                 <form onSubmit={handleSignUp}>
                   <div className="input-group">
                     <User size={18} />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="Username"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
@@ -402,8 +536,8 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
                   </div>
                   <div className="input-group">
                     <Mail size={18} />
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       placeholder="Email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -412,16 +546,16 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
                   </div>
                   <div className="input-group">
                     <Lock size={18} />
-                    <input 
-                      type={showPassword ? "text" : "password"} 
+                    <input
+                      type={showPassword ? "text" : "password"}
                       placeholder="Password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       autoComplete="new-password"
                       required
                     />
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="password-toggle"
                       onClick={() => setShowPassword(!showPassword)}
                     >
@@ -430,8 +564,8 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
                   </div>
                   <div className="input-group">
                     <Lock size={18} />
-                    <input 
-                      type={showPassword ? "text" : "password"} 
+                    <input
+                      type={showPassword ? "text" : "password"}
                       placeholder="Confirm password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
@@ -446,12 +580,10 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
                       checked={agreeTerms}
                       onChange={(e) => setAgreeTerms(e.target.checked)}
                     />
-                    <label htmlFor="agreeTerms">
-                      I agree to the Terms of Service
-                    </label>
+                    <label htmlFor="agreeTerms">I agree to the Terms of Service</label>
                   </div>
                   <button type="submit" disabled={isLoading}>
-                    {isLoading ? 'Creating Account...' : 'Sign up'}
+                    {isLoading ? "Creating Account..." : "Sign up"}
                   </button>
                 </form>
                 <p>
@@ -460,34 +592,58 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
                     Sign in here
                   </b>
                 </p>
-                
+
                 {/* Social Login Options */}
                 <div className="social-login-divider">
                   <span>or sign up with</span>
                 </div>
                 <div className="social-login-buttons">
-                  <button 
-                    className="social-btn google" 
+                  <button
+                    className="social-btn google"
                     onClick={() => googleLogin()}
                     aria-label="Sign up with Google"
                   >
                     <svg viewBox="0 0 24 24" width="18" height="18">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                      <path
+                        fill="#4285F4"
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                      />
                     </svg>
                   </button>
-                  <button 
-                    className="social-btn microsoft" 
-                    onClick={() => handleSocialLogin('Microsoft')}
+                  <button
+                    className="social-btn microsoft"
+                    onClick={() => handleSocialLogin("Microsoft")}
                     aria-label="Sign up with Microsoft"
                   >
                     <svg viewBox="0 0 24 24" width="18" height="18">
-                      <path fill="#f25022" d="M1 1h10v10H1z"/>
-                      <path fill="#00a4ef" d="M13 1h10v10H13z"/>
-                      <path fill="#7fba00" d="M1 13h10v10H1z"/>
-                      <path fill="#ffb900" d="M13 13h10v10H13z"/>
+                      <path fill="#f25022" d="M1 1h10v10H1z" />
+                      <path fill="#00a4ef" d="M13 1h10v10H13z" />
+                      <path fill="#7fba00" d="M1 13h10v10H1z" />
+                      <path fill="#ffb900" d="M13 13h10v10H13z" />
+                    </svg>
+                  </button>
+                  <button
+                    className="social-btn apple"
+                    onClick={() => handleSocialLogin("Apple")}
+                    aria-label="Sign up with Apple"
+                  >
+                    <svg viewBox="0 0 24 24" width="18" height="18">
+                      <path
+                        fill="#000"
+                        d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -495,7 +651,7 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
             </div>
           </div>
           {/* END SIGN UP */}
-          
+
           {/* SIGN IN */}
           <div className="col align-items-center flex-col sign-in">
             <div className="form-wrapper align-items-center">
@@ -507,13 +663,19 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
                 </div>
 
                 {error && <div className="error-message">{error}</div>}
-                {success && <div className="success-message">{success}</div>}
+                {success && (
+                  <div
+                    className={`success-message ${success.includes("Password reset successful") ? "reset-success" : ""}`}
+                  >
+                    {success}
+                  </div>
+                )}
 
                 <form onSubmit={handleSignIn}>
                   <div className="input-group">
                     <Mail size={18} />
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       placeholder="Email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -522,16 +684,16 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
                   </div>
                   <div className="input-group">
                     <Lock size={18} />
-                    <input 
-                      type={showPassword ? "text" : "password"} 
+                    <input
+                      type={showPassword ? "text" : "password"}
                       placeholder="Password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       autoComplete="current-password"
                       required
                     />
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="password-toggle"
                       onClick={() => setShowPassword(!showPassword)}
                     >
@@ -549,11 +711,17 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
                       <label htmlFor="rememberMe">Remember Me</label>
                     </div>
                     <div className="forgot-password">
-                        <button type="button" className="btn btn-link p-0" onClick={() => setShowForgotPassword(true)}>Forgot password?</button>
+                      <button
+                        type="button"
+                        className="btn btn-link p-0"
+                        onClick={() => setShowForgotPassword(true)}
+                      >
+                        Forgot password?
+                      </button>
                     </div>
                   </div>
                   <button type="submit" disabled={isLoading}>
-                    {isLoading ? 'Signing In...' : 'Sign in'}
+                    {isLoading ? "Signing In..." : "Sign in"}
                   </button>
                 </form>
                 <p>
@@ -563,34 +731,58 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
                   </b>
                 </p>
                 {/* demo credentials button removed for production UX */}
-                
+
                 {/* Social Login Options */}
                 <div className="social-login-divider">
                   <span>or continue with</span>
                 </div>
                 <div className="social-login-buttons">
-                  <button 
-                    className="social-btn google" 
+                  <button
+                    className="social-btn google"
                     onClick={() => googleLogin()}
                     aria-label="Sign in with Google"
                   >
                     <svg viewBox="0 0 24 24" width="18" height="18">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                      <path
+                        fill="#4285F4"
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                      />
                     </svg>
                   </button>
-                  <button 
-                    className="social-btn microsoft" 
-                    onClick={() => handleSocialLogin('Microsoft')}
+                  <button
+                    className="social-btn microsoft"
+                    onClick={() => handleSocialLogin("Microsoft")}
                     aria-label="Sign in with Microsoft"
                   >
                     <svg viewBox="0 0 24 24" width="18" height="18">
-                      <path fill="#f25022" d="M1 1h10v10H1z"/>
-                      <path fill="#00a4ef" d="M13 1h10v10H13z"/>
-                      <path fill="#7fba00" d="M1 13h10v10H1z"/>
-                      <path fill="#ffb900" d="M13 13h10v10H13z"/>
+                      <path fill="#f25022" d="M1 1h10v10H1z" />
+                      <path fill="#00a4ef" d="M13 1h10v10H13z" />
+                      <path fill="#7fba00" d="M1 13h10v10H1z" />
+                      <path fill="#ffb900" d="M13 13h10v10H13z" />
+                    </svg>
+                  </button>
+                  <button
+                    className="social-btn apple"
+                    onClick={() => handleSocialLogin("Apple")}
+                    aria-label="Sign in with Apple"
+                  >
+                    <svg viewBox="0 0 24 24" width="18" height="18">
+                      <path
+                        fill="#000"
+                        d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -600,7 +792,7 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
           {/* END SIGN IN */}
         </div>
         {/* END FORM SECTION */}
-        
+
         {/* CONTENT SECTION */}
         <div className="row content-row">
           {/* SIGN IN CONTENT - Only visible when in sign-in mode */}
@@ -614,7 +806,7 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
               <img src={quantumIcon} alt="QuantumChat Logo" className="content-icon" />
             </div>
           </div>
-          
+
           {/* Hidden on mobile to avoid duplicate icons */}
           <div className="col align-items-center flex-col mobile-hidden">
             <div className="img sign-up">
@@ -628,21 +820,115 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
           </div>
         </div>
       </div>
-      
+
       {/* Forgot Password Modal (inline) */}
       {showForgotPassword && (
-        <div className="modal-overlay" onClick={() => setShowForgotPassword(false)}>
-          <div className={`modal-content-wrapper ${darkMode ? 'bg-dark text-light' : 'bg-white text-dark'}`} onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
-            <div className="p-4">
-              <h5 className="fw-bold">Forgot Password</h5>
-              <p className="small text-muted">Enter your email and we'll send a reset link (demo).</p>
-              <form onSubmit={handleForgotSubmit}>
-                <div className="mb-3">
-                  <input type="email" className={`form-control ${darkMode ? 'bg-dark-subtle text-white border-secondary' : ''}`} placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                </div>
-                <div className="d-flex gap-2">
-                  <button type="submit" className="btn btn-primary">Send Reset Link</button>
-                  <button type="button" className="btn btn-secondary" onClick={() => setShowForgotPassword(false)}>Cancel</button>
+        <div
+          className="modal-overlay"
+          onClick={() => setShowForgotPassword(false)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+            backgroundColor: "rgba(2,6,23,0.65)",
+          }}
+        >
+          <div
+            className={`modal-content-wrapper ${darkMode ? "bg-dark text-light" : "bg-white text-dark"}`}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: "380px",
+              width: "90%",
+              borderRadius: "12px",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                padding: "20px",
+              }}
+            >
+              <h6
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                  margin: "0 0 8px 0",
+                  lineHeight: "1.2",
+                }}
+              >
+                Forgot Password
+              </h6>
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: darkMode ? "#999" : "#666",
+                  margin: "0 0 16px 0",
+                  lineHeight: "1.3",
+                }}
+              >
+                Enter your email and we'll send a reset link (demo).
+              </p>
+              <form
+                onSubmit={handleForgotSubmit}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}
+              >
+                <input
+                  type="email"
+                  className={`form-control ${darkMode ? "bg-dark-subtle text-white border-secondary" : ""}`}
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  style={{
+                    height: "36px",
+                    fontSize: "14px",
+                    padding: "8px 12px",
+                    margin: "0",
+                  }}
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    marginTop: "4px",
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    style={{
+                      height: "36px",
+                      padding: "8px 16px",
+                      fontSize: "14px",
+                      flex: "1",
+                    }}
+                  >
+                    Send Reset Link
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowForgotPassword(false)}
+                    style={{
+                      height: "36px",
+                      padding: "8px 12px",
+                      fontSize: "14px",
+                      flex: "0 0 auto",
+                    }}
+                  >
+                    Cancel
+                  </button>
                 </div>
               </form>
             </div>
@@ -650,14 +936,30 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
         </div>
       )}
 
-      {/* Reset Password Modal (inline) */}
+      {/* Shared Reset Password Modal */}
       {showResetModal && (
-        <ResetPasswordModal darkMode={darkMode} email={resetEmail} onComplete={handleResetComplete} />
+        <ResetPasswordModal
+          darkMode={darkMode}
+          email={resetParams.email}
+          token={resetParams.token}
+          onClose={handleResetClose}
+          onSuccess={handleResetSuccess}
+        />
       )}
 
       {/* Social Login Modal */}
-      {isModalOpen && (
+      {isModalOpen && modalType === "social-login" && (
         <SocialLoginModal
+          provider={activeProvider}
+          darkMode={darkMode}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={handleSocialLoginSuccess}
+        />
+      )}
+
+      {/* Social Auth Modal for Microsoft and Apple */}
+      {isModalOpen && modalType === "social-auth" && (
+        <SocialAuthModal
           provider={activeProvider}
           darkMode={darkMode}
           onClose={() => setIsModalOpen(false)}
@@ -670,51 +972,4 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
 
 export default AnimatedAuthForm;
 
-// Inline ResetPasswordModal to avoid extra files. This updates localStorage directly (demo only).
-function ResetPasswordModal({ darkMode, email, onComplete }) {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-    if (!password || password.length < 6) { setError('Password must be at least 6 characters'); return; }
-    if (password !== confirmPassword) { setError('Passwords do not match'); return; }
-    setIsLoading(true);
-    const users = JSON.parse(localStorage.getItem('chatapp_users')) || [];
-    const idx = users.findIndex(u => u.email === email);
-    if (idx === -1) { setError('User not found'); setIsLoading(false); return; }
-    const updated = { ...users[idx], password };
-    const updatedList = users.map(u => u.email === email ? updated : u);
-    localStorage.setItem('chatapp_users', JSON.stringify(updatedList));
-    setTimeout(() => { setIsLoading(false); onComplete(); }, 800);
-  };
-
-  return (
-    <div className="modal-overlay" onClick={onComplete}>
-      <div className={`modal-content-wrapper ${darkMode ? 'bg-dark text-light' : 'bg-white text-dark'}`} onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
-        <div className="p-4">
-          <h5 className="fw-bold">Reset Password</h5>
-          <p className="small text-muted">Create a new password for <strong>{email}</strong></p>
-          {error && <div className="alert alert-danger small">{error}</div>}
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3 position-relative">
-              <input type={showPassword ? 'text' : 'password'} className={`form-control ${darkMode ? 'bg-dark-subtle text-white border-secondary' : ''}`} placeholder="New password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-              <button type="button" className="btn position-absolute top-50 end-0 translate-middle-y" style={{ border: 'none', background: 'transparent' }} onClick={() => setShowPassword(s => !s)}>{showPassword ? 'Hide' : 'Show'}</button>
-            </div>
-            <div className="mb-3">
-              <input type={showPassword ? 'text' : 'password'} className={`form-control ${darkMode ? 'bg-dark-subtle text-white border-secondary' : ''}`} placeholder="Confirm password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-            </div>
-            <div className="d-flex gap-2">
-              <button type="submit" className="btn btn-primary" disabled={isLoading}>{isLoading ? 'Saving...' : 'Reset Password'}</button>
-              <button type="button" className="btn btn-secondary" onClick={onComplete}>Cancel</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
-}
+// Removed inline ResetPasswordModal in favor of shared component.

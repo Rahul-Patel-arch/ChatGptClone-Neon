@@ -7,7 +7,7 @@
   overflow-y: auto;
   min-height: 100vh;
   box-sizing: border-box;
-  font-family: Inter, 'Segoe UI', Arial, sans-serif;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
 }
 .library-view.dark {
   background: var(--surface);
@@ -49,7 +49,7 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   .library-header {
     padding: 16px 16px 12px 16px;
   }
@@ -66,12 +66,13 @@
 
 /* Content area */
 .library-content {
-  padding: 0 22px 28px 22px;
+  /* Offset for sticky header (60px) to prevent initial content from hiding behind it */
+  padding: 60px 22px 28px 22px;
 }
 
 @media (max-width: 768px) {
   .library-content {
-    padding: 0 16px 20px 16px;
+    padding: 56px 16px 20px 16px;
   }
 }
 
@@ -88,15 +89,17 @@
   position: relative;
   overflow: hidden;
   border-radius: 12px;
-  box-shadow: var(--shadow, 0 6px 20px rgba(11,12,15,0.08));
+  box-shadow: var(--shadow, 0 6px 20px rgba(11, 12, 15, 0.08));
   background: var(--surface);
   cursor: pointer;
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 .image-item:hover {
   transform: translateY(-6px);
-  box-shadow: 0 14px 36px rgba(11,12,15,0.12);
+  box-shadow: 0 14px 36px rgba(11, 12, 15, 0.12);
 }
 
 .image-item img {
@@ -115,7 +118,7 @@
 .image-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.0) 40%, rgba(0,0,0,0.35) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.35) 100%);
   display: flex;
   justify-content: center;
   align-items: flex-end;
@@ -130,7 +133,7 @@
   color: var(--accent-on);
   font-weight: 600;
   font-size: 0.95rem;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   padding: 6px 10px;
   border-radius: 8px;
 }
@@ -139,11 +142,12 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(2,6,23,0.65);
+  background-color: rgba(2, 6, 23, 0.65);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  /* Ensure the modal always sits above the app Header (which uses z-index up to ~1100) */
+  z-index: 2000;
   animation: fadeIn 0.2s ease-in-out;
 }
 
@@ -158,7 +162,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: var(--shadow, 0 10px 30px rgba(11,12,15,0.12));
+  box-shadow: var(--shadow, 0 10px 30px rgba(11, 12, 15, 0.12));
   animation: scaleUp 0.2s ease-in-out;
 }
 .modal-content img {
@@ -195,13 +199,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: box-shadow 0.18s ease, transform 0.12s ease;
+  transition:
+    box-shadow 0.18s ease,
+    transform 0.12s ease;
   padding: 8px 12px;
 }
 
 .library-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(11,12,15,0.06);
+  box-shadow: 0 8px 20px rgba(11, 12, 15, 0.06);
 }
 
 /* Responsive grid */
@@ -225,11 +231,21 @@
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes scaleUp {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

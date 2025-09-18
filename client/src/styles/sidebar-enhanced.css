@@ -25,6 +25,41 @@
   padding: 0;
   background: var(--auth-bg, #fff);
 }
+
+/* Pro mode accents */
+body.pro-mode .sidebar-header .sidebar-title::after {
+  content: "PRO";
+  margin-left: 6px;
+  position: relative;
+  top: -0.35em; /* superscript offset */
+  display: inline-block;
+  height: 16px;
+  line-height: 16px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.15) inset,
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark theme tuning for Pro badge */
+body.pro-mode .sidebar[data-theme="dark"] .sidebar-header .sidebar-title::after {
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.25) inset,
+    0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+body.pro-mode .sidebar {
+  box-shadow: inset 0 1px 0 rgba(249, 115, 22, 0.25);
+}
 /* Sidebar collapse/expand button styles */
 .sidebar-header .btn.ghost {
   background: none;
@@ -33,7 +68,9 @@
   padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 .sidebar-header .btn.ghost:hover {
   background: var(--sidebar-toggle-hover-bg, #eaeaea);
@@ -73,7 +110,7 @@
 }
 
 .sidebar-btn.library-btn:hover {
-  background-color: var(--btn-hover-bg, rgba(0,0,0,0.05));
+  background-color: var(--btn-hover-bg, rgba(0, 0, 0, 0.05));
 }
 
 /* Collapsed sidebar - only show button as small pill */
@@ -86,7 +123,7 @@
 
 /* Tooltip for collapsed sidebar */
 .sidebar.collapsed .sidebar-btn.library-btn:hover::after {
-  content: 'Library';
+  content: "Library";
   position: absolute;
   left: 60px;
   background: var(--tooltip-bg, #333);
@@ -112,7 +149,9 @@
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease, width 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    width 0.3s ease;
   overflow: hidden;
   /* Safe area support for mobile */
   padding-left: env(safe-area-inset-left);
@@ -162,11 +201,11 @@
     height: 100vh !important;
     z-index: 1000 !important;
   }
-  
+
   .sidebar.mobile.collapsed {
     transform: translateX(-100%) !important;
   }
-  
+
   .sidebar.mobile:not(.collapsed) {
     transform: translateX(0) !important;
   }
@@ -190,11 +229,11 @@
     z-index: 1000 !important;
     transition: transform 0.3s ease !important;
   }
-  
+
   .sidebar.mobile.collapsed {
     transform: translateX(-100%) !important;
   }
-  
+
   .sidebar.mobile:not(.collapsed) {
     transform: translateX(0) !important;
   }
@@ -204,6 +243,7 @@
 .sidebar.collapsed:not(.mobile) {
   width: 60px;
   max-width: 60px; /* Prevent expansion */
+  box-sizing: border-box; /* Include border in width */
 }
 
 /* Desktop expanded state - ensure proper width constraint */
@@ -211,11 +251,13 @@
   .sidebar:not(.mobile):not(.collapsed) {
     width: var(--sidebar-width) !important;
     max-width: var(--sidebar-width) !important;
+    box-sizing: border-box !important; /* Include border in width */
   }
-  
+
   .sidebar:not(.mobile).collapsed {
     width: 60px !important;
     max-width: 60px !important;
+    box-sizing: border-box !important; /* Include border in width */
   }
 }
 
@@ -227,13 +269,13 @@
   .sidebar {
     --sidebar-width: 280px;
   }
-  
+
   /* Ensure mobile sidebar has proper width constraints */
   .sidebar.mobile {
     width: 280px !important;
     max-width: 280px !important;
   }
-  
+
   .sidebar.mobile.collapsed {
     width: 280px !important;
     max-width: 280px !important;
@@ -245,17 +287,17 @@
   .sidebar {
     --sidebar-width: 260px;
   }
-  
+
   .sidebar.mobile {
     width: 260px !important;
     max-width: 260px !important;
   }
-  
+
   .sidebar.mobile.collapsed {
     width: 260px !important;
     max-width: 260px !important;
   }
-  
+
   .sidebar.mobile:not(.collapsed)::before {
     background: rgba(0, 0, 0, 0.4);
   }
@@ -400,19 +442,19 @@
   .sidebar.mobile ~ .main-content {
     margin-left: 0 !important;
   }
-  
+
   .main-content.mobile {
     margin-left: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
     overflow-x: hidden;
   }
-  
+
   /* Ensure sidebar is above all content on mobile */
   .sidebar.mobile {
     z-index: 1001;
   }
-  
+
   /* Better touch feedback */
   .sidebar.mobile .chat-item:active,
   .sidebar.mobile .sidebar-btn:active {
@@ -423,7 +465,9 @@
 
 /* Sidebar Container */
 .sidebar {
-  transition: width 0.3s ease, transform 0.3s ease;
+  transition:
+    width 0.3s ease,
+    transform 0.3s ease;
   background: var(--sidebar-bg);
   border-right: 1px solid var(--sidebar-border);
   height: 100vh;
@@ -435,7 +479,7 @@
   z-index: 100;
   overflow: hidden; /* prevent double scrollbars */
   flex-shrink: 0; /* Prevent flexbox from shrinking the sidebar */
-  flex-grow: 0;   /* Prevent flexbox from growing the sidebar */
+  flex-grow: 0; /* Prevent flexbox from growing the sidebar */
 }
 
 .sidebar.collapsed {
@@ -513,7 +557,8 @@
 
 /* Ensure circular new chat button stays centered */
 .sidebar.collapsed .new-chat-btn {
-  margin: 0 auto var(--space-2);
+  /* push down slightly in collapsed mode */
+  margin: var(--space-2) auto var(--space-2);
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -571,10 +616,19 @@
 
 /* user-profile now outside scroll container at bottom */
 
-.sidebar-content::-webkit-scrollbar { width: 8px; }
-.sidebar-content::-webkit-scrollbar-track { background: transparent; }
-.sidebar-content::-webkit-scrollbar-thumb { background: var(--sidebar-border); border-radius: 4px; }
-.sidebar-content::-webkit-scrollbar-thumb:hover { background: var(--sidebar-hover); }
+.sidebar-content::-webkit-scrollbar {
+  width: 8px;
+}
+.sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: var(--sidebar-border);
+  border-radius: 4px;
+}
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: var(--sidebar-hover);
+}
 
 /* Sidebar Header */
 .sidebar-header {
@@ -614,13 +668,29 @@
 .sidebar-logo {
   width: 32px;
   height: 32px;
-  filter: drop-shadow(0 0 5px rgba(79, 108, 222, 0.5));
+  /* Remove strong glow */
+  filter: none;
   flex-shrink: 0;
+  border-radius: 8px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 .sidebar.collapsed .sidebar-logo {
   width: 24px;
   height: 24px;
+}
+
+/* Subtle hover effect: only a faint background on hover when collapsed */
+.sidebar.collapsed .expand-btn:hover img,
+.sidebar.collapsed .sidebar-logo:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+/* When expanded, allow a very slight scale to keep it tasteful */
+.sidebar:not(.collapsed) .sidebar-logo:hover {
+  transform: scale(1.02);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .sidebar-title {
@@ -903,7 +973,10 @@
   right: 4px;
 }
 
-.chat-item.with-actions.menu-open { position: relative; z-index: 25; }
+.chat-item.with-actions.menu-open {
+  position: relative;
+  z-index: 25;
+}
 
 .chat-action-btn {
   background: transparent;
@@ -917,7 +990,9 @@
   color: var(--sidebar-muted-text);
   cursor: pointer;
   padding: 0;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .chat-action-btn:hover {
@@ -938,7 +1013,7 @@
   flex-direction: column;
   gap: 2px;
   min-width: 140px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 20;
 }
 
@@ -955,7 +1030,9 @@
   color: var(--sidebar-text);
   cursor: pointer;
   text-align: left;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .chat-item-menu-btn:hover {
@@ -967,7 +1044,7 @@
 }
 
 .chat-item-menu-btn.danger:hover {
-  background: rgba(220,53,69,0.1);
+  background: rgba(220, 53, 69, 0.1);
 }
 
 .chat-item.collapsed {
@@ -998,6 +1075,34 @@
   flex: 1;
 }
 
+/* Inline rename styles */
+.chat-rename-inline {
+  width: 100%;
+  padding: 6px 8px;
+}
+
+.chat-rename-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: var(--sidebar-text);
+  background: var(--sidebar-surface);
+  border: 1px solid var(--sidebar-border);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.chat-rename-input::placeholder {
+  color: var(--sidebar-muted-text);
+}
+
+.chat-rename-input:focus {
+  border-color: var(--sidebar-new-chat-bg);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .chat-icon {
   flex-shrink: 0;
 }
@@ -1012,8 +1117,8 @@
 }
 
 /* Ensure profile anchors bottom in normal (expanded) mode */
-.sidebar > .user-profile { 
-  margin-top: auto; 
+.sidebar > .user-profile {
+  margin-top: auto;
 }
 
 .sidebar.collapsed .user-profile {
@@ -1253,11 +1358,11 @@
   .sidebar-actions.expanded {
     padding: 0 var(--space-3);
   }
-  
+
   .sidebar-nav.expanded {
     padding: 0 var(--space-3);
   }
-  
+
   .chat-list {
     padding: 0;
   }
@@ -1296,7 +1401,9 @@
 .chat-item.with-actions .chat-actions {
   opacity: 0;
   transform: translateY(0);
-  transition: opacity 0.16s ease, transform 0.16s ease;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
   margin-right: 8px;
   display: flex;
   align-items: center;
@@ -1322,7 +1429,9 @@
 
 .chat-action-btn:hover {
   transform: translateY(-2px);
-  transition: transform 0.12s ease, background-color 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    background-color 0.12s ease;
 }
 
 /* Ensure the per-item menu (three-dot) doesn't obscure layout when visible */
@@ -1350,7 +1459,9 @@
 /* Ensure the title text remains visible when an item is active */
 .chat-item.with-actions.active .chat-main-btn .chat-title {
   color: var(--sidebar-text) !important;
-  -webkit-text-fill-color: var(--sidebar-text) !important; /* ensure visibility in browsers that use fill-color */
+  -webkit-text-fill-color: var(
+    --sidebar-text
+  ) !important; /* ensure visibility in browsers that use fill-color */
 }
 
 /* If icons or other text turned dim, ensure they inherit readable color */
@@ -1379,6 +1490,207 @@
 /* Ensure focus-visible ring appears on the parent item for keyboard users */
 .chat-item.with-actions:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(96,165,250,0.08);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.08);
   border-radius: 10px;
+}
+
+/* ULTRA-AGGRESSIVE white area prevention - comprehensive background coverage */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  background: #f5f6fa !important;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+.dark html,
+.dark body,
+.dark #root {
+  background: #0e1114 !important;
+}
+
+/* Comprehensive background coverage - prevent white screen flash during sidebar collapse */
+.main-content {
+  background: #f5f6fa !important;
+  transition:
+    margin-left 0.3s ease,
+    background-color 0.3s ease !important;
+  will-change: margin-left, background-color;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dark .main-content {
+  background: #0e1114 !important;
+}
+
+/* Ensure app container has proper background during transitions */
+.app-container {
+  background: #f5f6fa !important;
+  transition: background-color 0.3s ease !important;
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  width: 100vw;
+}
+
+.dark .app-container {
+  background: #0e1114 !important;
+}
+
+/* Add multiple background layers that persist during transitions */
+.app-container::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #f5f6fa;
+  z-index: -10;
+  transition: background-color 0.3s ease;
+}
+
+.app-container::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: -500px; /* Extend far left to cover any gaps */
+  right: 0;
+  bottom: 0;
+  background: #f5f6fa;
+  z-index: -9;
+  transition: background-color 0.3s ease;
+}
+
+.dark .app-container::before,
+.dark .app-container::after {
+  background: #0e1114;
+}
+
+/* Prevent layout jumps during sidebar transitions */
+.sidebar {
+  will-change: width, transform;
+  transition:
+    width 0.3s ease,
+    transform 0.3s ease !important;
+  position: relative;
+  z-index: 1000;
+  background: #1f2937 !important;
+}
+
+/* Ensure main content stays above background layers */
+.main-content {
+  z-index: 1;
+}
+
+/* Additional comprehensive fix for all transition areas */
+.main-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -500px; /* Extend background far to cover any transition gap */
+  right: 0;
+  bottom: 0;
+  background: #f5f6fa;
+  z-index: -1;
+  transition: background-color 0.3s ease;
+}
+
+.dark .main-content::before {
+  background: #0e1114;
+}
+
+/* Add another layer for extra coverage */
+.main-content::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #f5f6fa;
+  z-index: -2;
+  transition: background-color 0.3s ease;
+}
+
+.dark .main-content::after {
+  background: #0e1114;
+}
+
+/* Force background on all possible containers */
+.chat-area,
+.chat-content,
+.chat-messages-container,
+.d-flex {
+  background: #f5f6fa !important;
+  transition: background-color 0.3s ease;
+}
+
+.dark .chat-area,
+.dark .chat-content,
+.dark .chat-messages-container,
+.dark .d-flex {
+  background: #0e1114 !important;
+}
+
+/* Override any potential white backgrounds */
+.bg-white,
+.bg-light,
+.container,
+.container-fluid {
+  background: #f5f6fa !important;
+}
+
+.dark .bg-white,
+.dark .bg-light,
+.dark .container,
+.dark .container-fluid {
+  background: #0e1114 !important;
+}
+
+/* Add universal background for any missed elements */
+body * {
+  box-sizing: border-box;
+}
+
+/* Ensure sidebar area is completely covered */
+.sidebar-bg-cover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #f5f6fa;
+  z-index: -100;
+}
+
+.dark .sidebar-bg-cover {
+  background: #0e1114;
+}
+
+/* Mobile header z-index fix - header should be behind sidebar when expanded */
+@media (max-width: 768px) {
+  .chat-header {
+    z-index: 500 !important;
+  }
+
+  /* But the mobile logo button should be above sidebar for interaction */
+  .mobile-logo-btn {
+    z-index: 1100 !important;
+    position: relative;
+  }
 }

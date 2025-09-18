@@ -9,18 +9,23 @@
   backdrop-filter: blur(8px);
   z-index: 4000;
   padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 .upgrade-container {
   width: 100%;
   max-width: 900px;
-  background: var(--bg);
+  background: var(--surface);
   color: var(--text);
   border-radius: 20px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
   border: 1px solid var(--border);
   position: relative;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Remove hardcoded light/dark mode styles - use theme variables instead */
@@ -35,10 +40,11 @@
   align-items: flex-start;
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .upgrade-header::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   right: 0;
@@ -92,6 +98,9 @@
 /* Body */
 .upgrade-body {
   padding: 40px 32px 32px 32px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .plans-grid {
@@ -136,7 +145,7 @@
 }
 
 .plan-card.pro-plan::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   right: 0;
@@ -152,7 +161,11 @@
   top: -10px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, var(--accent-warning, #FFD700) 0%, var(--accent-warning-hover, #FFA500) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--accent-warning, #ffd700) 0%,
+    var(--accent-warning-hover, #ffa500) 100%
+  );
   color: var(--text);
   padding: 6px 12px;
   border-radius: 16px;
@@ -186,7 +199,7 @@
 }
 
 .plan-icon {
-  color: var(--accent-warning, #FFD700);
+  color: var(--accent-warning, #ffd700);
   font-size: 20px;
 }
 
@@ -305,13 +318,13 @@
 }
 
 .upgrade-button::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   transition: left 0.5s ease;
 }
 
@@ -349,103 +362,129 @@
 /* Remove hardcoded color overrides - let theme variables handle everything */
 @media (max-width: 768px) {
   .upgrade-overlay {
-    padding: 0;
+    padding: 16px;
     align-items: flex-start;
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
-  
+
   .upgrade-container {
     width: 100%;
-    height: 100vh;
-    border-radius: 0;
-    max-height: none;
-    overflow-y: auto;
+    max-height: calc(100vh - 32px);
+    border-radius: 16px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
   }
-  
+
   .upgrade-header {
     padding: 20px 16px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    flex-shrink: 0;
   }
-  
+
   .upgrade-title {
     font-size: 22px;
   }
-  
+
   .upgrade-subtitle {
     font-size: 14px;
   }
-  
+
   .upgrade-body {
-    padding: 20px 16px 80px 16px;
+    padding: 20px 16px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
   }
-  
+
   .plans-grid {
     grid-template-columns: 1fr;
     gap: 16px;
+    margin-bottom: 24px;
   }
-  
+
   .plan-card {
     padding: 20px;
     border-radius: 12px;
   }
-  
+
   .plan-title {
     font-size: 18px;
   }
-  
+
   .price-amount {
     font-size: 24px;
   }
-  
+
   .popular-badge {
     top: -8px;
     padding: 4px 10px;
     font-size: 10px;
   }
-  
+
   .feature-item {
     font-size: 13px;
     margin-bottom: 10px;
   }
-  
+
   .plan-button {
     padding: 12px 20px;
     font-size: 14px;
   }
+
+  .upgrade-footer {
+    flex-shrink: 0;
+    margin-top: 16px;
+  }
 }
 
 @media (max-width: 480px) {
+  .upgrade-overlay {
+    padding: 12px;
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .upgrade-container {
+    max-height: calc(100vh - 24px);
+    border-radius: 12px;
+  }
+
   .upgrade-header {
     padding: 16px 12px;
   }
-  
+
   .upgrade-title {
     font-size: 20px;
   }
-  
+
   .upgrade-body {
-    padding: 16px 12px 60px 12px;
+    padding: 16px 12px;
   }
-  
+
   .plan-card {
     padding: 16px;
   }
-  
+
   .plan-title {
     font-size: 16px;
   }
-  
+
   .price-amount {
     font-size: 20px;
   }
-  
+
   .feature-item {
     font-size: 12px;
   }
-  
+
   .close-button {
     width: 36px;
     height: 36px;
+  }
+
+  .upgrade-footer {
+    padding-top: 16px;
+    margin-top: 16px;
   }
 }
