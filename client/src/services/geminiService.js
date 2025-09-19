@@ -3,6 +3,86 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // Initialize the Gemini AI with API key from environment variables
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
+// Simple in-memory cooldown tracking for 429 quota responses
+let geminiCooldownUntil = 0; // epoch ms when we can next send
+
+// Simple FIFO request queue to serialize Gemini calls and avoid burst 429s
+const geminiRequestQueue = [];
+let geminiQueueProcessing = false;
+
+function sleep(ms) {
+  return new Promise((res) => setTimeout(res, ms));
+}
+
+/**
+ * Internal processor: runs queued tasks one-by-one respecting cooldown.
+ */
+async function processGeminiQueue() {
+  if (geminiQueueProcessing) return;
+  geminiQueueProcessing = true;
+  try {
+    while (geminiRequestQueue.length) {
+      const { task, resolve, reject, onQueuedStatus } = geminiRequestQueue.shift();
+      // Wait out any cooldown before firing the request
+      let rl = getGeminiRateLimitInfo();
+      if (rl.coolingDown) {
+        // Inform streaming callbacks (if provided) that we're still queued
+        if (typeof onQueuedStatus === 'function') {
+          onQueuedStatus(`Waiting ${rl.retryAfterSeconds}s due to rate limit...`);
+        }
+      }
+      while (rl.coolingDown) {
+        // Sleep in short intervals so UI countdown stays responsive
+        const waitMs = Math.min(1000, Math.max(250, (geminiCooldownUntil - Date.now())));
+        await sleep(waitMs);
+        rl = getGeminiRateLimitInfo();
+      }
+      try {
+        const result = await task();
+        resolve(result);
+      } catch (err) {
+        reject(err);
+      }
+    }
+  } finally {
+    geminiQueueProcessing = false;
+  }
+}
+
+/**
+ * Enqueue a Gemini request (standard or streaming). Returns a promise resolved with task result.
+ * @param {Function} task async function to execute
+ * @param {Function} onQueuedStatus optional callback invoked with status strings while waiting
+ */
+function enqueueGeminiRequest(task, onQueuedStatus) {
+  return new Promise((resolve, reject) => {
+    geminiRequestQueue.push({ task, resolve, reject, onQueuedStatus });
+    processGeminiQueue();
+  });
+}
+
+/**
+ * Queue introspection (optional UI usage)
+ */
+export function getGeminiQueueInfo() {
+  return {
+    length: geminiRequestQueue.length,
+    processing: geminiQueueProcessing,
+  };
+}
+
+/**
+ * Check if we are currently under a rate-limit cooldown.
+ * @returns {{ coolingDown: boolean, retryAfterSeconds: number }}
+ */
+export function getGeminiRateLimitInfo() {
+  const now = Date.now();
+  if (geminiCooldownUntil > now) {
+    return { coolingDown: true, retryAfterSeconds: Math.max(0, Math.ceil((geminiCooldownUntil - now) / 1000)) };
+  }
+  return { coolingDown: false, retryAfterSeconds: 0 };
+}
+
 // Model and generation config from env (with safe defaults)
 const MODEL_NAME = import.meta.env.VITE_GEMINI_MODEL_NAME || "gemini-1.5-flash";
 const TEMPERATURE =
@@ -20,7 +100,7 @@ const TOP_K =
 const MAX_TOKENS =
   typeof import.meta.env.VITE_GEMINI_MAX_TOKENS !== "undefined"
     ? Number(import.meta.env.VITE_GEMINI_MAX_TOKENS)
-    : 2048;
+    : 2049;
 
 // Get the model with enhanced configuration
 const model = genAI.getGenerativeModel({
@@ -89,21 +169,42 @@ function formatMessagesForGemini(messages) {
 function handleGeminiError(error) {
   console.error("Gemini API Error:", error);
 
-  const errorMessage = error.message?.toLowerCase() || "";
+  const raw = error?.message || "";
+  const errorMessage = raw.toLowerCase();
+
+  // Extract retry delay if present (e.g., "Please retry in 58.510830182s" or RetryInfo JSON retryDelay:"58s")
+  let retrySeconds = 0;
+  const regexHuman = /retry in\s+([0-9]+(?:\.[0-9]+)?)s/i;
+  const humanMatch = raw.match(regexHuman);
+  if (humanMatch) retrySeconds = Math.max(retrySeconds, Math.ceil(parseFloat(humanMatch[1])));
+  const retryJson = /"retryDelay"\s*:\s*"(\d+)s"/i.exec(raw);
+  if (retryJson) retrySeconds = Math.max(retrySeconds, parseInt(retryJson[1], 10));
+
+  // 429 / quota exceeded handling -> set cooldown
+  if (errorMessage.includes("quota") || errorMessage.includes("limit") || errorMessage.includes("429")) {
+    if (retrySeconds > 0) {
+      geminiCooldownUntil = Date.now() + retrySeconds * 1000;
+    } else {
+      // fallback minimal backoff (30s) if not provided
+      geminiCooldownUntil = Date.now() + 30_000;
+    }
+    const info = getGeminiRateLimitInfo();
+    throw new Error(`Rate limit reached. Try again in ${info.retryAfterSeconds}s.`);
+  }
 
   if (errorMessage.includes("api_key") || errorMessage.includes("key")) {
     throw new Error("Invalid API key. Please check your Gemini API configuration.");
-  } else if (errorMessage.includes("quota") || errorMessage.includes("limit")) {
-    throw new Error("API quota exceeded. Please try again later.");
-  } else if (errorMessage.includes("safety") || errorMessage.includes("blocked")) {
-    throw new Error("Message blocked by safety filters. Please rephrase your message.");
-  } else if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
-    throw new Error("Network error. Please check your connection and try again.");
-  } else if (errorMessage.includes("overloaded") || errorMessage.includes("busy")) {
-    throw new Error("Service is temporarily overloaded. Please try again in a moment.");
-  } else {
-    throw new Error("Failed to generate response. Please try again.");
   }
+  if (errorMessage.includes("safety") || errorMessage.includes("blocked")) {
+    throw new Error("Message blocked by safety filters. Please rephrase your message.");
+  }
+  if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
+    throw new Error("Network error. Please check your connection and try again.");
+  }
+  if (errorMessage.includes("overloaded") || errorMessage.includes("busy")) {
+    throw new Error("Service is temporarily overloaded. Please try again in a moment.");
+  }
+  throw new Error("Failed to generate response. Please try again.");
 }
 
 /**
@@ -153,6 +254,11 @@ export async function generateGeminiResponse(
   extraParts = [] // optional: additional parts like inlineData or text parts
 ) {
   try {
+    // Pre-empt if under cooldown
+    const rl = getGeminiRateLimitInfo();
+    if (rl.coolingDown) {
+      throw new Error(`Rate limit active. Try again in ${rl.retryAfterSeconds}s.`);
+    }
     // Build chat history with system instruction
     const chatHistory = [
       customInstruction
@@ -214,6 +320,14 @@ export async function generateGeminiStreamResponse(
   extraParts = [] // optional: additional parts like inlineData or text parts
 ) {
   try {
+    // Pre-empt if under cooldown
+    const rl = getGeminiRateLimitInfo();
+    if (rl.coolingDown) {
+      if (onChunk && typeof onChunk === 'function') {
+        onChunk(null, true, `Rate limit active. Try again in ${rl.retryAfterSeconds}s.`);
+      }
+      return ""; // Return empty content; UI can show error message
+    }
     // Build chat history with system instruction
     const chatHistory = [
       customInstruction
@@ -305,6 +419,42 @@ export async function generateGeminiStreamResponse(
     }
     handleGeminiError(error);
   }
+}
+
+/**
+ * Queued variant of generateGeminiResponse to avoid parallel bursts.
+ */
+export function queuedGenerateGeminiResponse(
+  prompt,
+  conversationHistory = [],
+  customInstruction = null,
+  extraParts = []
+) {
+  return enqueueGeminiRequest(() => generateGeminiResponse(prompt, conversationHistory, customInstruction, extraParts));
+}
+
+/**
+ * Queued variant of generateGeminiStreamResponse. The onChunk callback may receive a queued status message via error parameter with isComplete=false.
+ */
+export function queuedGenerateGeminiStreamResponse(
+  prompt,
+  conversationHistory = [],
+  onChunk,
+  customInstruction = null,
+  options = {},
+  extraParts = []
+) {
+  // Provide a minimal queued status notifier
+  const queuedNotifier = (status) => {
+    if (typeof onChunk === 'function') {
+      // status as an errorMessage-like third param but not complete
+      onChunk(null, false, status);
+    }
+  };
+  return enqueueGeminiRequest(
+    () => generateGeminiStreamResponse(prompt, conversationHistory, onChunk, customInstruction, options, extraParts),
+    queuedNotifier
+  );
 }
 
 /**

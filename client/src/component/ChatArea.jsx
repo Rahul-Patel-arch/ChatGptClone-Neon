@@ -4,6 +4,7 @@ import {
   Sun,
   Moon,
   Volume2,
+  VolumeX,
   Copy,
   Share2,
   Plus,
@@ -27,6 +28,8 @@ export default function ChatArea({
   onStopStreaming,
   // currentUser, // Available but unused
   isLoading = false,
+  rateLimited = false,
+  rateLimitSeconds = 0,
   // onOpenSettings, // Available but unused
   onShareMessage, // now used
   // onGlobalShare, // Available but unused
@@ -109,16 +112,159 @@ export default function ChatArea({
     setTimeout(() => setShowToast(false), 2000);
   };
 
-  // Text-to-speech
-  const speakText = (text) => {
-    if (!text || typeof text !== "string") return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    window.speechSynthesis.speak(utterance);
-    showNotification("🔊 Reading message aloud");
+  // Text-to-speech with reliable toggle (single active)
+  const [speakingIndex, setSpeakingIndex] = React.useState(null); // index of currently spoken message
+  const utteranceRef = React.useRef(null);
+  const speakStartTimeoutRef = React.useRef(null); // guards delayed start after cancel
+  const availableVoicesRef = React.useRef([]);
+
+  // Load / refresh voices (some browsers async load voices list)
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    const loadVoices = () => {
+      const v = window.speechSynthesis.getVoices();
+      if (v && v.length) {
+        availableVoicesRef.current = v;
+      }
+    };
+    loadVoices();
+    window.speechSynthesis.addEventListener?.('voiceschanged', loadVoices);
+    return () => {
+      window.speechSynthesis.removeEventListener?.('voiceschanged', loadVoices);
+    };
+  }, []);
+
+  const forceCancel = () => {
+    // Multi-cancel still used for explicit STOP only
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        try { window.speechSynthesis?.cancel(); } catch { /* ignore */ }
+      }, i * 40);
+    }
+  };
+
+  const stopSpeaking = React.useCallback(() => {
+    if (speakStartTimeoutRef.current) {
+      clearTimeout(speakStartTimeoutRef.current);
+      speakStartTimeoutRef.current = null;
+    }
+    forceCancel();
+    utteranceRef.current = null;
+    setSpeakingIndex(null);
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      // Cleanup on unmount
+      stopSpeaking();
+    };
+  }, [stopSpeaking]);
+
+  const toggleSpeakMessage = (idx, rawText) => {
+    // Disallow TTS while message is still streaming
+    const msg = messages[idx];
+    if (msg?.isStreaming) {
+      showNotification('Wait for the message to finish before reading');
+      return;
+    }
+    // If already speaking this message -> stop
+    if (speakingIndex === idx) {
+      stopSpeaking();
+      return;
+    }
+    if (!rawText || typeof rawText !== 'string') return;
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      showNotification('Speech synthesis not supported in this browser');
+      return;
+    }
+    // (Re)load voices synchronously if empty
+    if (!availableVoicesRef.current.length) {
+      const current = window.speechSynthesis.getVoices();
+      if (current && current.length) availableVoicesRef.current = current;
+    }
+    // Basic markdown/code cleanup for more natural speech
+    let text = rawText
+      .replace(/```[\s\S]*?```/g, (block) => block.replace(/```/g, '')) // strip code fences
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/__([^_]+)__/g, '$1')
+      .replace(/_([^_]+)_/g, '$1')
+      .replace(/#+\s*/g, '')
+  .replace(/[>*-]+/g, ' ')
+      .replace(/\s+/g, ' ') // collapse whitespace
+      .trim();
+
+    // Choose a preferred English voice if available (skip each run re-pick for performance)
+    const pickVoice = () => {
+      const voices = availableVoicesRef.current || [];
+      if (!voices.length) return null;
+      // Preference order: Google en-US, Microsoft en-US, generic en-*
+      const pref = voices.find(v => /Google/i.test(v.name) && /en-US/i.test(v.lang))
+        || voices.find(v => /Microsoft/i.test(v.name) && /en-US/i.test(v.lang))
+        || voices.find(v => /en-US/i.test(v.lang))
+        || voices.find(v => /^en-/i.test(v.lang));
+      return pref || voices[0];
+    };
+
+    const startSpeech = () => {
+      try {
+        // Long response chunking: speak in ~4000 char slices (API limit is higher but some engines stall)
+        const MAX_CHARS = 4000;
+        const segments = [];
+        if (text.length > MAX_CHARS) {
+          let start = 0;
+          while (start < text.length) {
+            segments.push(text.slice(start, start + MAX_CHARS));
+            start += MAX_CHARS;
+          }
+        } else {
+          segments.push(text);
+        }
+        let segmentIndex = 0;
+        const playNext = () => {
+          if (segmentIndex >= segments.length) {
+            setSpeakingIndex((current) => (current === idx ? null : current));
+            return;
+          }
+          const partText = segments[segmentIndex++];
+          const utt = new SpeechSynthesisUtterance(partText);
+          const voice = pickVoice();
+          if (voice) utt.voice = voice;
+          utt.lang = voice?.lang || 'en-US';
+          utt.rate = 0.95; // slightly slower for clarity
+          utt.pitch = 1;
+          utt.onend = () => {
+            if (speakingIndex === idx) {
+              playNext();
+            }
+          };
+          utt.onerror = () => {
+            setSpeakingIndex((current) => (current === idx ? null : current));
+            showNotification('⚠️ Speech error');
+          };
+          utteranceRef.current = utt;
+          window.speechSynthesis.speak(utt);
+        };
+        setSpeakingIndex(idx);
+        playNext();
+      } catch (e) {
+        console.error('Speech synthesis failed', e);
+        showNotification('⚠️ Could not start speech');
+      }
+    };
+
+    // If another message is currently speaking, cancel then delay new start so multi-cancel doesn't nuke it
+    if (speakingIndex !== null) {
+      window.speechSynthesis.cancel();
+      setSpeakingIndex(null);
+      if (speakStartTimeoutRef.current) clearTimeout(speakStartTimeoutRef.current);
+      speakStartTimeoutRef.current = setTimeout(() => {
+        startSpeech();
+      }, 120); // allow internal queue to flush (multi-cancel is 0-80ms)
+    } else {
+      startSpeech();
+    }
   };
 
   // Copy message
@@ -257,14 +403,17 @@ export default function ChatArea({
                     ) : (
                       <MarkdownMessage darkMode={darkMode}>{msg.text}</MarkdownMessage>
                     )}
-                    {msg.role === "ai" && msg.text && !msg.isStreaming && (
+                    {(msg.role === "ai" || msg.role === 'assistant') && msg.text && !msg.isStreaming && (
                       <div className="msg-actions">
                         <button
-                          onClick={() => speakText(msg.text)}
-                          className="msg-action-btn"
-                          title="Read aloud"
+                          onClick={() => toggleSpeakMessage(i, msg.text)}
+                          className={`msg-action-btn tts-toggle ${speakingIndex === i ? "speaking" : ""}`}
+                          title={speakingIndex === i ? "Stop reading" : "Read aloud"}
+                          aria-label={speakingIndex === i ? "Stop reading message" : "Read message aloud"}
+                          aria-pressed={speakingIndex === i}
+                          role="button"
                         >
-                          <Volume2 size={14} />
+                          {speakingIndex === i ? <VolumeX size={14} /> : <Volume2 size={14} />}
                         </button>
                         <button
                           onClick={() => copyMessage(msg.text)}
@@ -347,13 +496,13 @@ export default function ChatArea({
                 // Handle Enter key with proper event handling
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault(); // Prevent form submission or other default behavior
-                  if (!isLoading && message && message.trim()) {
+                  if (!isLoading && !rateLimited && message && message.trim()) {
                     handleSendMessage();
                   }
                 }
               }}
-              placeholder="Message QuantumChat..."
-              disabled={isLoading}
+              placeholder={rateLimited ? `Rate limit: wait ${rateLimitSeconds}s` : "Message QuantumChat..."}
+              disabled={isLoading || rateLimited}
               aria-label="Message input"
             />
 
@@ -424,13 +573,13 @@ export default function ChatArea({
               ) : (
                 <button
                   onClick={handleSendMessage}
-                  disabled={!message.trim()}
+                  disabled={!message.trim() || rateLimited}
                   className="pill-action send-btn always-visible-send-btn"
                   aria-label="Send message"
                   title="Send message"
                   style={{
-                    background: !message.trim() ? "#cccccc" : "#4A6FA5",
-                    color: !message.trim() ? "#666666" : "#ffffff",
+                    background: (!message.trim() || rateLimited) ? "#cccccc" : "#4A6FA5",
+                    color: (!message.trim() || rateLimited) ? "#666666" : "#ffffff",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -440,13 +589,13 @@ export default function ChatArea({
                     minHeight: "36px",
                     borderRadius: "10px",
                     border: "none",
-                    cursor: !message.trim() ? "not-allowed" : "pointer",
+                    cursor: (!message.trim() || rateLimited) ? "not-allowed" : "pointer",
                     flexShrink: 0,
                     position: "relative",
                     zIndex: 10,
                     visibility: "visible",
                     opacity: 1,
-                    boxShadow: !message.trim() ? "none" : "0 2px 8px rgba(74, 111, 165, 0.3)",
+                    boxShadow: (!message.trim() || rateLimited) ? "none" : "0 2px 8px rgba(74, 111, 165, 0.3)",
                   }}
                 >
                   <Send size={18} style={{ color: "inherit" }} />

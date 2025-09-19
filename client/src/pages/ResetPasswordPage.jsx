@@ -12,10 +12,29 @@ export default function ResetPasswordPage({ darkMode }) {
   const [legacyNotice, setLegacyNotice] = useState("");
 
   useEffect(() => {
-    const url = new URL(window.location.href);
-    const email = url.searchParams.get("email") || "";
-    const prt = url.searchParams.get("prt") || "";
-    const legacy = url.searchParams.get("legacy") === "1";
+    const href = window.location.href;
+    const url = new URL(href);
+    let email = url.searchParams.get("email") || "";
+    let prt = url.searchParams.get("prt") || "";
+    let legacy = url.searchParams.get("legacy") === "1";
+
+    // Hash-routing fallback: queries live inside the hash fragment like /#/reset-password?email=...&prt=...
+    if ((!email || !prt) && href.includes("#")) {
+      try {
+        const hash = href.split("#", 2)[1] || ""; // e.g. '/reset-password?email=...&prt=...'
+        const qIndex = hash.indexOf("?");
+        if (qIndex !== -1) {
+          const query = hash.substring(qIndex + 1);
+          const hashParams = new URLSearchParams(query);
+            if (!email) email = hashParams.get("email") || email;
+            if (!prt) prt = hashParams.get("prt") || prt;
+            if (!legacy) legacy = hashParams.get("legacy") === "1";
+        }
+      } catch (e) {
+        console.warn("[ResetPasswordPage] Hash param parse failed", e);
+      }
+    }
+
     setParams({ email, prt, legacy });
     if (legacy && !prt) {
       setLegacyNotice(
