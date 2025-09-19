@@ -7,11 +7,8 @@ import ChatArea from "./component/ChatArea";
 import Header from "./component/Header";
 import SettingsPanel from "./component/SettingsPanel/SettingsPanel";
 import useToast from "./hooks/useToast";
-import {
-  generateGeminiStreamResponse,
-  isGeminiConfigured,
-  generateConversationTitle,
-} from "./services/geminiService";
+import { queuedGenerateGeminiStreamResponse, isGeminiConfigured, generateConversationTitle } from "./services/geminiService";
+import useGeminiRateLimit from "./hooks/useGeminiRateLimit";
 
 export default function ChatApp() {
   const outlet = useOutletContext?.() || {};
@@ -69,6 +66,7 @@ export default function ChatApp() {
 
   // Toast notifications (shared pattern with MainLayout)
   const { toast, show: showNotification } = useToast();
+  const { coolingDown: geminiCoolingDown, retryAfterSeconds: geminiRetry } = useGeminiRateLimit();
 
   // Helper to sanitize and cap titles consistently
   const sanitizeTitle = (s) =>
@@ -125,6 +123,10 @@ export default function ChatApp() {
   const handleSettingsChange = () => {}; // Simplified since theme is managed by MainLayout
 
   const handleSend = async (textArg) => {
+    if (geminiCoolingDown) {
+      showNotification(`Rate limited. Wait ${geminiRetry}s`);
+      return;
+    }
     // Support either a plain string or an object { text, attachment }
     let attachmentPart = null;
     let draft = input;
@@ -220,12 +222,15 @@ export default function ChatApp() {
         userMsg,
       ];
 
-      const fullResponse = await generateGeminiStreamResponse(
+      const fullResponse = await queuedGenerateGeminiStreamResponse(
         userMsg.text,
         convoHistory,
         (chunk, isComplete, errorMessage) => {
           if (errorMessage) {
             console.error(errorMessage);
+            if (/rate limit/i.test(errorMessage)) {
+              showNotification(errorMessage);
+            }
             return;
           }
           if (chunk) {
@@ -827,6 +832,29 @@ export default function ChatApp() {
         position: "relative",
       }}
     >
+      {geminiCoolingDown && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            padding: "8px 12px",
+            background: "#c0392b",
+            color: "#fff",
+            fontSize: 14,
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 8,
+            zIndex: 50,
+          }}
+          role="status"
+          aria-live="polite"
+        >
+          <strong style={{fontWeight:600}}>Rate limited</strong>
+          <span>Retry in {geminiRetry}s</span>
+        </div>
+      )}
       {/* Header with theme toggle and share functionality */}
       <Header
         darkMode={darkMode}
@@ -861,6 +889,8 @@ export default function ChatApp() {
           onStopStreaming={handleStop}
           currentUser={currentUser}
           isLoading={isLoading}
+          rateLimited={geminiCoolingDown}
+          rateLimitSeconds={geminiRetry}
           onToggleSidebar={onToggleSidebar}
           onOpenSettings={handleSettings}
           onShareMessage={handleShareMessage}

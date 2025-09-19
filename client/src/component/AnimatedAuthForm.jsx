@@ -407,6 +407,7 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetParams, setResetParams] = useState({ email: "", token: "" });
+  const [resetContext, setResetContext] = useState({ active: false, emailParam: null });
 
   const handleForgotSubmit = async (e) => {
     e.preventDefault();
@@ -467,6 +468,7 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
     if (emailParam && prt) {
       setResetParams({ email: emailParam, token: "" });
       setShowResetModal(true);
+      setResetContext({ active: true, emailParam });
     }
   }, []);
 
@@ -521,6 +523,11 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
                     className={`success-message ${success.includes("Password reset successful") ? "reset-success" : ""}`}
                   >
                     {success}
+                  </div>
+                )}
+                {resetContext.active && !success && (
+                  <div className="info-message" style={{ marginBottom: '10px', fontSize: '12px' }}>
+                    <strong>Reset link detected.</strong> Complete the password reset dialog. Saved credentials suppressed.
                   </div>
                 )}
 
@@ -669,6 +676,11 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
                     className={`success-message ${success.includes("Password reset successful") ? "reset-success" : ""}`}
                   >
                     {success}
+                  </div>
+                )}
+                {resetContext.active && !success && (
+                  <div className="info-message" style={{ marginBottom: '10px', fontSize: '12px' }}>
+                    <strong>Reset link detected.</strong> Complete the password reset dialog. Saved credentials suppressed.
                   </div>
                 )}
 

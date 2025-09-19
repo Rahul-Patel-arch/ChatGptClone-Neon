@@ -530,12 +530,26 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
   };
 
   // Auto-fill remembered user
+  const [resetContext, setResetContext] = useState({ active: false, emailParam: null });
   useEffect(() => {
+    // Detect reset token in URL; if present we suppress remembered autofill to avoid confusion
+    try {
+      const url = new URL(window.location.href);
+      const prt = url.searchParams.get('prt');
+      const emailQ = url.searchParams.get('email');
+      if (prt && emailQ) {
+        setResetContext({ active: true, emailParam: emailQ });
+        // Do NOT auto fill remembered credentials in reset context
+        return;
+      }
+    } catch {/* ignore */}
     const rememberedUser = localStorage.getItem("chatapp_remember_user");
     if (rememberedUser && isLoginView) {
-      const user = JSON.parse(rememberedUser);
-      setEmail(user.email);
-      setRememberMe(true);
+      try {
+        const user = JSON.parse(rememberedUser);
+        setEmail(user.email);
+        setRememberMe(true);
+      } catch {/* ignore parse */}
     }
   }, [isLoginView]);
 
@@ -720,6 +734,18 @@ export default function AuthForm({ darkMode, toggleDarkMode, onLogin }) {
 
                 {/* Success/Error Messages */}
                 <AnimatePresence>
+                  {resetContext.active && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="alert alert-warning rounded-3 mb-2 py-2"
+                      style={{ fontSize: '12px', lineHeight: 1.3 }}
+                    >
+                      <strong>Password reset link detected.</strong><br />
+                      Enter a new password via the reset dialog (if it opened) or use the link in your email. Saved login was not auto-filled.
+                    </motion.div>
+                  )}
                   {error && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}

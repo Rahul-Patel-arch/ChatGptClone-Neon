@@ -118,15 +118,15 @@ export default function ResetPasswordModal({ darkMode, email, token, onClose, on
     const map = {
       expired: "This reset link has expired.",
       consumed: "This reset link was already used.",
-      signature: "Signature check failed (token altered).",
-      email_mismatch: "Token does not match this email.",
-      format: "Token format invalid.",
-      parts: "Token parts missing.",
-      decode: "Could not decode token.",
-      version: "Token version unsupported.",
-      timestamp: "Token timestamp invalid.",
-      not_found: "No matching token found.",
-      missing: "Token missing.",
+      signature: "Security check failed (token altered).",
+      email_mismatch: "This link was issued for a different email address.",
+      format: "Reset link format is invalid.",
+      parts: "Reset link components are missing.",
+      decode: "Could not decode reset link.",
+      version: "Reset link version unsupported.",
+      timestamp: "Reset link timestamp invalid.",
+      not_found: "We couldn't find a matching reset request.",
+      missing: "This reset link is missing its token (maybe the URL was truncated). Please request a new link.",
       error: "Unexpected validation error.",
     };
     const friendly = map[status.reason] || "This reset link is invalid.";
@@ -335,7 +335,7 @@ export default function ResetPasswordModal({ darkMode, email, token, onClose, on
             </form>
           )}
           {!status.valid && !success && (
-            <div style={{ textAlign: "center", marginTop: "20px" }}>
+            <div style={{ textAlign: "center", marginTop: "20px", display: "flex", flexDirection: "column", gap: 12 }}>
               <button
                 className="btn btn-outline-secondary"
                 onClick={closeAndCleanup}
@@ -347,6 +347,28 @@ export default function ResetPasswordModal({ darkMode, email, token, onClose, on
               >
                 Close
               </button>
+              {status.reason === 'missing' && (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    // Redirect user to login page where they can trigger Forgot Password again
+                    try {
+                      window.location.replace('/login');
+                    } catch (e) {
+                      console.error('Redirect failed', e);
+                    }
+                  }}
+                  style={{
+                    height: "36px",
+                    fontSize: "14px",
+                    padding: "8px 16px",
+                    background: 'linear-gradient(to right,#3b82f6,#8b5cf6)',
+                    border: 'none'
+                  }}
+                >
+                  Request New Link
+                </button>
+              )}
             </div>
           )}
         </div>
