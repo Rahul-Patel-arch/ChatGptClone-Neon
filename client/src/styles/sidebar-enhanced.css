@@ -1187,6 +1187,25 @@ body.pro-mode .sidebar {
   color: var(--sidebar-text);
 }
 
+/* Ensure username itself doesn't show a separate hover highlight; only the button background changes */
+.user-profile-button .user-name {
+  pointer-events: none; /* delegate all hover/click to the outer button */
+}
+
+/* Prevent any unintended visual change for the text itself on hover/focus */
+.user-profile-button:hover .user-name,
+.user-profile-button:focus .user-name,
+.user-profile-button:active .user-name {
+  background: transparent !important;
+  color: var(--sidebar-text) !important;
+}
+
+/* Eliminate any inner highlight rectangle behind the username area */
+.user-profile-button .user-info,
+.user-profile-button .user-info .user-name {
+  background: transparent !important;
+}
+
 .chevron {
   transition: transform var(--transition);
   flex-shrink: 0;

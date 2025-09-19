@@ -2,7 +2,9 @@
 // If VITE_ROUTER_MODE=hash, links will use hash routing: origin + '/#/path?query'.
 // Otherwise, use normal browser routing: origin + '/path?query'.
 
-export const getRouterMode = () => (import.meta.env.VITE_ROUTER_MODE || 'browser').toLowerCase();
+// Default to 'hash' for maximum compatibility on static hosts without rewrites.
+// Override with VITE_ROUTER_MODE=browser to use clean URLs when server rewrites are configured.
+export const getRouterMode = () => (import.meta.env.VITE_ROUTER_MODE || 'hash').toLowerCase();
 
 export function buildAppUrl(pathWithQuery = '/') {
   const origin = window.location.origin;

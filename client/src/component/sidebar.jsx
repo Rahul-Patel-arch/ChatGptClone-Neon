@@ -84,10 +84,12 @@ export default function Sidebar({
       >
         <SidebarHeader
           isCollapsed={isCollapsed}
-          onToggle={onToggle}
-          isMobile={isMobile}
-          onNewChat={onNewChat}
-          shouldShowFull={shouldShowFull}
+            onToggle={onToggle}
+            isMobile={isMobile}
+            onNewChat={onNewChat}
+            shouldShowFull={shouldShowFull}
+            onSelectChat={onSelectChat}
+            activeChatId={activeChatId}
         />
         <div className="sidebar-content">
           <SidebarActions

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 import Header from "../component/Header";
 import SettingsPanel from "../component/SettingsPanel/SettingsPanel";
 import "../styles/LibraryView.css";
@@ -14,6 +14,7 @@ const defaultLibraryImages = [
 ];
 
 export default function LibraryView({ initialImages = defaultLibraryImages }) {
+  const navigate = useNavigate();
   const [images] = useState(initialImages); // no add/search
   const [selectedImage, setSelectedImage] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -26,6 +27,8 @@ export default function LibraryView({ initialImages = defaultLibraryImages }) {
     sidebarCollapsed,
     darkMode,
     toggleDarkMode,
+    themeMode,
+    setThemeMode,
     currentUser,
     chats,
     onRestoreChat,
@@ -60,6 +63,7 @@ export default function LibraryView({ initialImages = defaultLibraryImages }) {
         activeChat={{ title: "Image Library" }}
         messages={[]}
         showExportMenu={false}
+        onUpgradeClick={() => navigate("/update")}
       />
 
       <div className="library-content" style={{ flex: 1, overflow: "auto" }}>
@@ -97,8 +101,8 @@ export default function LibraryView({ initialImages = defaultLibraryImages }) {
         isOpen={showSettings}
         onClose={handleCloseSettings}
         darkMode={darkMode}
-        theme={darkMode ? "dark" : "light"}
-        setTheme={toggleDarkMode}
+        theme={themeMode || (darkMode ? "dark" : "light")}
+        setTheme={setThemeMode}
         currentUser={currentUser}
         onSettingsChange={handleSettingsChange}
         chats={chats || []}

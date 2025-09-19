@@ -125,7 +125,29 @@ export default function ChatArea({
   const copyMessage = async (text) => {
     if (!text) return;
     try {
-      await navigator.clipboard.writeText(text);
+      // Basic markdown stripping so clipboard gets clean text
+      const cleaned = text
+        // Remove code fences (```language optional)
+        .replace(/```[\s\S]*?```/g, (block) => {
+          // Keep inner code content without backticks
+          return block.replace(/```/g, "");
+        })
+        // Bold **text** or __text__ -> text
+        .replace(/\*\*(.*?)\*\*/g, "$1")
+        .replace(/__(.*?)__/g, "$1")
+        // Italic *text* or _text_ (avoid matching bullet * )
+        .replace(/(^|\s)\*(?!\s)([^*]+?)\*(?=\s|[.!,?]|$)/g, (_, p1, p2) => `${p1}${p2}`)
+        .replace(/(^|\s)_([^_]+?)_(?=\s|[.!,?]|$)/g, (_, p1, p2) => `${p1}${p2}`)
+        // Inline code `code` -> code
+        .replace(/`([^`]+?)`/g, "$1")
+        // Remove leading list markers * - + and numbered lists
+        .replace(/^[ \t]*([*+-]|\d+\.)\s+/gm, "")
+        // Replace multiple blank lines
+        .replace(/\n{3,}/g, "\n\n")
+        // Trim leftover emphasis markers
+        .replace(/\*/g, "")
+        .trim();
+      await navigator.clipboard.writeText(cleaned || text);
       showNotification("📋 Message copied to clipboard");
     } catch {
       showNotification("📋 Copy failed");
