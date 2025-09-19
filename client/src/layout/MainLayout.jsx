@@ -144,12 +144,17 @@ export default function MainLayout(props) {
           style={{
             position: "fixed",
             top: 0,
-            left: `${sidebarWidth}px`, // Start overlay after sidebar width
+            // On mobile the actual sidebar width is a fixed panel (~280px). Our responsive hook
+            // returns 0 for mobile (overlay mode) so we hard-code the open width here to keep
+            // the overlay from covering the sidebar itself.
+            left: "280px",
             right: 0,
             bottom: 0,
-            background: "rgba(0,0,0,0.3)",
-            zIndex: 1070,
+            background: "rgba(0,0,0,0.35)",
+            backdropFilter: "blur(2px)",
+            zIndex: 1200, // BELOW header (which we will raise) but ABOVE main content
             pointerEvents: "auto",
+            transition: "left .3s ease",
           }}
         />
       )}
@@ -248,7 +253,7 @@ export default function MainLayout(props) {
           onClose={() => setLayoutSettingsOpen(false)}
           darkMode={props.darkMode}
           theme={props.themeMode || (props.darkMode ? "dark" : "light")}
-          setTheme={props.setThemeMode || props.toggleDarkMode}
+          setTheme={props.setThemeMode}
           currentUser={props.currentUser}
           onSettingsChange={() => {}}
           chats={chats}

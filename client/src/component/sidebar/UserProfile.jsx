@@ -56,13 +56,17 @@ export default function UserProfile({
     if (callback) callback();
   };
 
+  // Derive a first-name (first word) representation for display in the sidebar
+  const fullName = (currentUser?.name || "User").trim();
+  const firstWord = fullName.split(/\s+/)[0];
+
   return (
     <div className="user-profile">
       <button
         ref={buttonRef}
         className={`user-profile-button ${isCollapsed ? "collapsed" : ""}`}
         onClick={handleMenuToggle}
-        aria-label={isCollapsed ? "Open user menu" : `${currentUser?.name || "User"} menu`}
+        aria-label={isCollapsed ? "Open user menu" : `${fullName} menu`}
         aria-expanded={showUserMenu}
         aria-haspopup="true"
       >
@@ -70,7 +74,7 @@ export default function UserProfile({
           <>
             <div className="user-avatar">{currentUser?.name?.[0]?.toUpperCase() || "U"}</div>
             <div className="user-info">
-              <div className="user-name">{currentUser?.name || "User"}</div>
+              <div className="user-name">{firstWord}</div>
             </div>
             <ChevronUp size={16} className={`chevron ${showUserMenu ? "rotated" : ""}`} />
           </>

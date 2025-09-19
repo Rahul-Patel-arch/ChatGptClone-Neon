@@ -7,7 +7,6 @@ export default function Header({
   toggleDarkMode,
   onToggleSidebar,
   isMobile,
-  sidebarCollapsed,
   activeChat,
   messages = [],
   onShareClick,
@@ -18,10 +17,10 @@ export default function Header({
   handleShare,
   showExportMenu = true,
   proMode = false,
-  onUpgradeClick,
+  onUpgradeClick = () => {},
 }) {
-  // Calculate z-index based on mobile state and sidebar state
-  const headerZIndex = isMobile && !sidebarCollapsed ? 500 : 1100;
+  // Keep header always above sidebar (1000) and overlay (1200 used in MainLayout overlay is below header)
+  const headerZIndex = 1300;
 
   return (
     <div
@@ -86,7 +85,7 @@ export default function Header({
               background: "transparent",
               border: "none",
               position: "relative",
-              zIndex: 1100, // Ensure logo is always above sidebar for interaction
+              zIndex: headerZIndex + 1,
               flexShrink: 0, // Prevent logo from shrinking
             }}
           >

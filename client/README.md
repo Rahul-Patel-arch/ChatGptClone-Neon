@@ -103,7 +103,43 @@ The application implements a secure, stateless password reset system:
 4. **Cross-Browser**: Works across different browsers/devices
 5. **Fallback**: Legacy token detection with upgrade prompts
 
-For detailed configuration, see [EMAIL_TEMPLATES.md](./EMAIL_TEMPLATES.md).
+### Email Template Configuration (Inline)
+
+The app uses EmailJS with three templates: welcome, login, reset.
+
+Required `.env` vars:
+
+```
+VITE_EMAILJS_SERVICE_ID=your_service_id
+VITE_EMAILJS_PUBLIC_KEY=your_public_key
+VITE_EMAILJS_WELCOME_TEMPLATE_ID=template_welcome
+VITE_EMAILJS_LOGIN_TEMPLATE_ID=template_login
+VITE_EMAILJS_RESET_TEMPLATE_ID=template_reset
+VITE_SUPPORT_EMAIL=support@yourapp.com
+```
+
+Legacy fallback vars (optional):
+```
+VITE_EMAILJS_TEMPLATE_ID=fallback_template
+VITE_EMAILJS_FORGOT_PASSWORD_TEMPLATE_ID=fallback_reset_template
+```
+
+Common template variables available:
+`username`, `email`, `site_name`, `site_url`, `support_email`.
+
+Extra per email type:
+- Welcome: `event_type="welcome"`, `login_url`, `reset_token="WELCOME_NEW_USER"`
+- Login: `event_type="login"`, `login_url`, `reset_token="WELCOME_BACK"`
+- Reset: `event_type="reset"`, `reset_link`, `expires_minutes` (30), `reset_token` (stateless token for legacy templates)
+
+Example reset button snippet:
+```html
+<a href="{{reset_link}}" style="background:#007bff;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;">Reset Your Password</a>
+```
+
+Migration note: Old `reset_token` query param links still work; new stateless links use `?prt=...` but both params are sent for backward compatibility.
+
+Debug tips: Call `summarizeEmailConfig()` in dev console to verify loaded config.
 
 ## Data Persistence
 
@@ -209,7 +245,7 @@ src/
 4. **Copy template IDs** to your `.env` file
 5. **Test templates** using EmailJS dashboard
 
-For detailed template variables and examples, see [EMAIL_TEMPLATES.md](./EMAIL_TEMPLATES.md).
+See above inline section for template variables & examples. (Former separate `EMAIL_TEMPLATES.md` has been consolidated.)
 
 ## Production Deployment
 

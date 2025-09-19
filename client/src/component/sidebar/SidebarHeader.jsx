@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Menu } from "lucide-react";
 import quantumIcon from "../../assets/quantum-chat-icon.png";
 
@@ -8,11 +9,21 @@ export default function SidebarHeader({
   isMobile,
   shouldShowFull,
   handleNewChatClick,
+  onSelectChat,
+  activeChatId,
 }) {
+  const navigate = useNavigate();
   const handleLogoClick = () => {
-    // Only trigger new chat when sidebar is expanded (full)
     if (!shouldShowFull) return;
-    if (onNewChat) onNewChat();
+    // Navigate to root chat route
+    navigate("/");
+    // Prefer selecting current active chat if one exists; otherwise start a new chat
+    if (activeChatId && onSelectChat) {
+      onSelectChat(activeChatId);
+    } else if (onNewChat) {
+      const maybeId = onNewChat();
+      if (maybeId && onSelectChat) onSelectChat(maybeId);
+    }
     if (handleNewChatClick) handleNewChatClick();
   };
 

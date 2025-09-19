@@ -111,6 +111,8 @@ const SettingsPanel = ({
 
   // Theme change handler
   const handleThemeChange = (newTheme) => {
+    // If already selected, do nothing (prevents accidental toggling when a toggle function is passed)
+    if (settings.appearance.theme === newTheme) return;
     setSettings((prev) => ({
       ...prev,
       appearance: { ...prev.appearance, theme: newTheme },
