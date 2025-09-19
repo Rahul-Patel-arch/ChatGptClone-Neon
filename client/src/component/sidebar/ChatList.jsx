@@ -124,21 +124,21 @@ export default function ChatList({
                     >
                       <MoreVertical size={14} />
                     </button>
-                    {isMenuOpen && (
-                      <ChatItemMenu
-                        chatId={chat.id}
-                        onRename={() => handleStartRename(chat.id, chat.title)}
-                        onShare={() => onShare && onShare(chat.id)}
-                        onArchive={() => onArchive && onArchive(chat.id)}
-                        onDelete={() => {
-                          const ok = window.confirm(
-                            "Delete this chat permanently? This cannot be undone."
-                          );
-                          if (ok && onDelete) onDelete(chat.id);
-                        }}
-                        onClose={() => setOpenMenuId(null)}
-                      />
-                    )}
+                   {isMenuOpen && (
+  <ChatItemMenu
+    chatId={chat.id}
+    onRename={() => handleStartRename(chat.id, chat.title)}
+    onShare={onShare}
+    onArchive={onArchive}
+    onDelete={(id) => {
+      onDelete && onDelete(id);
+      setOpenMenuId(null); // close after delete
+    }}
+    onClose={() => setOpenMenuId(null)}
+  />
+)}
+
+
                   </div>
                 </>
               )}

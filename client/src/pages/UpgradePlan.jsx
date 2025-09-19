@@ -37,7 +37,7 @@ const UpgradePlan = ({ onClose }) => {
           transition={{ duration: 0.3, ease: "easeOut" }}
         >
           {/* Header */}
-          <div className="upgrade-header">
+          <div className="upgrade-header" style={{borderRadius: '18px 18px 0 0'}}>
             <div className="header-content">
               <h1 className="upgrade-title">Upgrade Plan</h1>
               <p className="upgrade-subtitle">

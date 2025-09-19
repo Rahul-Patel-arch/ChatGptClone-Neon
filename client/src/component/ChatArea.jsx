@@ -4,6 +4,7 @@ import {
   Sun,
   Moon,
   Volume2,
+  VolumeX,
   Copy,
   Share2,
   Plus,
@@ -109,16 +110,46 @@ export default function ChatArea({
     setTimeout(() => setShowToast(false), 2000);
   };
 
-  // Text-to-speech
-  const speakText = (text) => {
+  // Text-to-speech with toggle (single active)
+  const [speakingIndex, setSpeakingIndex] = React.useState(null);
+  const utteranceRef = React.useRef(null);
+
+  const stopSpeaking = React.useCallback(() => {
+    try { window.speechSynthesis.cancel(); } catch { /* ignore */ }
+    utteranceRef.current = null;
+    setSpeakingIndex(null);
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      // Cleanup on unmount
+      stopSpeaking();
+    };
+  }, [stopSpeaking]);
+
+  const toggleSpeakMessage = (idx, text) => {
+    if (speakingIndex === idx) {
+      stopSpeaking();
+      return;
+    }
     if (!text || typeof text !== "string") return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    window.speechSynthesis.speak(utterance);
-    showNotification("🔊 Reading message aloud");
+    stopSpeaking(); // ensure clean start
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = "en-US";
+    utt.rate = 0.9;
+    utt.pitch = 1;
+    utt.onend = () => {
+      // Auto-clear if same index still selected
+      setSpeakingIndex((current) => (current === idx ? null : current));
+    };
+    utteranceRef.current = utt;
+    try {
+      window.speechSynthesis.speak(utt);
+      setSpeakingIndex(idx);
+      showNotification("🔊 Reading message aloud");
+    } catch {
+      showNotification("⚠️ Could not start speech");
+    }
   };
 
   // Copy message
@@ -260,11 +291,12 @@ export default function ChatArea({
                     {msg.role === "ai" && msg.text && !msg.isStreaming && (
                       <div className="msg-actions">
                         <button
-                          onClick={() => speakText(msg.text)}
-                          className="msg-action-btn"
-                          title="Read aloud"
+                          onClick={() => toggleSpeakMessage(i, msg.text)}
+                          className={`msg-action-btn ${speakingIndex === i ? "speaking" : ""}`}
+                          title={speakingIndex === i ? "Stop reading" : "Read aloud"}
+                          aria-label={speakingIndex === i ? "Stop reading message" : "Read message aloud"}
                         >
-                          <Volume2 size={14} />
+                          {speakingIndex === i ? <VolumeX size={14} /> : <Volume2 size={14} />}
                         </button>
                         <button
                           onClick={() => copyMessage(msg.text)}

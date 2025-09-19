@@ -476,7 +476,7 @@ const AnimatedAuthForm = ({ darkMode, toggleDarkMode, onLogin }) => {
     url.searchParams.delete("prt");
     window.history.replaceState({}, document.title, url.pathname + url.search);
     setShowResetModal(false);
-    setSuccess("Password reset successful. Please sign in.");
+    setSuccess();
     if (!isSignIn) toggle();
   };
 

@@ -413,11 +413,8 @@ const SettingsPanel = ({
                             <button
                               className="btn-icon delete"
                               onClick={() => {
-                                if (
-                                  window.confirm(
-                                    "Permanently delete this chat? This action cannot be undone."
-                                  )
-                                ) {
+                                const message = "Permanently delete this chat? This action cannot be undone.";
+                                if (window.confirm(message)) {
                                   onPermanentlyDeleteChat(chat.id);
                                 }
                               }}
@@ -454,11 +451,8 @@ const SettingsPanel = ({
                     <button
                       className="btn danger"
                       onClick={() => {
-                        if (
-                          window.confirm(
-                            "Permanently delete all archived chats? This action cannot be undone."
-                          )
-                        ) {
+                        const message = "Permanently delete all archived chats? This action cannot be undone.";
+                        if (window.confirm(message)) {
                           chats
                             .filter((chat) => chat.archived)
                             .forEach((chat) => onPermanentlyDeleteChat(chat.id));

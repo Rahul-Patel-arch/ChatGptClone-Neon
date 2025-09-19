@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Pencil, Share2, Archive, Trash2 } from "lucide-react";
 
 export default function ChatItemMenu({
-  chatId, // ✅ pass the chat ID
+  chatId,
   onRename,
   onShare,
   onArchive,
@@ -26,26 +26,34 @@ export default function ChatItemMenu({
     };
   }, [onClose]);
 
-  // eslint-disable-next-line no-unused-vars
-  const Item = ({ icon: Icon, label, action, danger }) => (
+  // Pass icon as child to avoid unused var false positives in some ESLint setups
+  const Item = ({ label, action, danger, children }) => (
     <button
       className={`chat-item-menu-btn ${danger ? "danger" : ""}`}
       onClick={() => {
-        action(chatId);
+        action?.(chatId);
         onClose?.();
       }}
     >
-      <Icon size={14} />
+      {children}
       <span>{label}</span>
     </button>
   );
 
   return (
     <div className="chat-item-menu" ref={ref} role="menu">
-      <Item icon={Pencil} label="Rename" action={onRename} />
-      <Item icon={Share2} label="Share" action={onShare} /> {/* ✅ passes chatId now */}
-      <Item icon={Archive} label="Archive" action={onArchive} />
-      <Item icon={Trash2} label="Delete" action={onDelete} danger />
+      <Item label="Rename" action={onRename}>
+        <Pencil size={14} />
+      </Item>
+      <Item label="Share" action={onShare}>
+        <Share2 size={14} />
+      </Item>
+      <Item label="Archive" action={onArchive}>
+        <Archive size={14} />
+      </Item>
+      <Item label="Delete" danger action={onDelete}>
+        <Trash2 size={14} />
+      </Item>
     </div>
   );
 }

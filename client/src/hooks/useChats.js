@@ -5,7 +5,7 @@
 // - Persistence of chats and active chat id
 // - Simple, predictable operations
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 
 /**
  * Chat message shape
@@ -38,25 +38,34 @@ export default function useChats(userEmail, opts) {
   const [chats, setChats] = useState(/** @type {Chat[]} */ ([]))
   const [activeChatId, setActiveChatId] = useState(/** @type {string|null} */ (null))
   const hasHydratedRef = useRef(false)
+  // Tracks whether we have previously hydrated a non-empty set so we don't accidentally overwrite with [] on a transient render
+  const hadPersistedChatsRef = useRef(false)
+  // Flag that the current transition to empty was intentional (user deleted last chat)
+  const intentionalEmptyRef = useRef(false)
 
-  // Hydrate on user change with legacy migration
+  // Legacy storage keys (for migration + later cleanup)
+  const legacyCandidates = useMemo(() => [
+    `quantumchat_chats:${userId}`,
+    'quantumchat_chats_v1',
+    'quantumchat_chats',
+  ], [userId])
+
+  // Hydrate on user change with legacy migration (one-time per user session)
   useEffect(() => {
     setChats([])
     setActiveChatId(null)
     hasHydratedRef.current = false
     try {
       let raw = localStorage.getItem(CHAT_STORAGE_KEY)
+      // Only attempt migration if there is no versioned key present at all
       if (!raw) {
-        const legacyCandidates = [
-          `quantumchat_chats:${userId}`,
-          'quantumchat_chats_v1',
-          'quantumchat_chats',
-        ]
         for (const key of legacyCandidates) {
           const legacy = localStorage.getItem(key)
           if (legacy) {
             raw = legacy
             try { localStorage.setItem(CHAT_STORAGE_KEY, legacy) } catch { /* ignore persistence errors */ }
+            // Immediately purge legacy key to prevent resurrection after deletion
+            try { localStorage.removeItem(key) } catch { /* ignore */ }
             break
           }
         }
@@ -73,12 +82,13 @@ export default function useChats(userEmail, opts) {
               archivedAt: c.archivedAt,
               messages: Array.isArray(c.messages) ? c.messages : [],
             }))
-            // Exclude empty chats (no messages)
-            .filter((c) => Array.isArray(c.messages) && c.messages.length > 0)
-            // newest first
+            // newest first (keep even empty chats to preserve placeholders the user created)
             .sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0))
 
           setChats(normalized)
+          if (normalized.length > 0) {
+            hadPersistedChatsRef.current = true
+          }
           const savedActiveId = localStorage.getItem(ACTIVE_CHAT_STORAGE_KEY)
           const hasSaved = savedActiveId && normalized.some((c) => c.id === savedActiveId)
           if (hasSaved) setActiveChatId(savedActiveId)
@@ -90,26 +100,37 @@ export default function useChats(userEmail, opts) {
       }
   } catch { /* ignore */ }
     hasHydratedRef.current = true
-  }, [userId, CHAT_STORAGE_KEY, ACTIVE_CHAT_STORAGE_KEY])
+  }, [userId, CHAT_STORAGE_KEY, ACTIVE_CHAT_STORAGE_KEY, legacyCandidates])
 
-  // Persist chats
+  // Persist chats, but avoid overwriting existing stored chats with an empty array unless the user intentionally deleted them.
   useEffect(() => {
     if (!hasHydratedRef.current) return
-    const toSave = chats.filter((c) => Array.isArray(c.messages) && c.messages.length > 0)
-    if (toSave.length === 0) {
-  try { localStorage.removeItem(CHAT_STORAGE_KEY) } catch { /* ignore */ }
-      return
+    if (chats.length === 0) {
+      // If we previously had chats and this empty state was NOT intentional, skip writing
+      if (hadPersistedChatsRef.current && !intentionalEmptyRef.current) {
+        return
+      }
+      // If empty was intentional (deletions), persist empty array to reflect cleared state
+      try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify([])) } catch { /* ignore */ }
+      intentionalEmptyRef.current = false
+      hadPersistedChatsRef.current = false
+    } else {
+      try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chats)) } catch { /* ignore */ }
+      hadPersistedChatsRef.current = true
+      intentionalEmptyRef.current = false
     }
-  try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(toSave)) } catch { /* ignore */ }
-  }, [chats, CHAT_STORAGE_KEY])
+    // Defensive: remove legacy keys once we have a saved versioned state
+    for (const key of legacyCandidates) {
+      try { localStorage.removeItem(key) } catch { /* ignore */ }
+    }
+  }, [chats, CHAT_STORAGE_KEY, legacyCandidates])
 
   // Persist active chat id
   useEffect(() => {
     if (!hasHydratedRef.current) return
     try {
-      const existsAndHasMessages =
-        activeChatId && chats.some((c) => c.id === activeChatId && Array.isArray(c.messages) && c.messages.length > 0)
-      if (existsAndHasMessages) localStorage.setItem(ACTIVE_CHAT_STORAGE_KEY, activeChatId)
+      const exists = activeChatId && chats.some((c) => c.id === activeChatId)
+      if (exists) localStorage.setItem(ACTIVE_CHAT_STORAGE_KEY, activeChatId)
       else localStorage.removeItem(ACTIVE_CHAT_STORAGE_KEY)
   } catch { /* ignore */ }
   }, [activeChatId, chats, ACTIVE_CHAT_STORAGE_KEY])
@@ -127,7 +148,19 @@ export default function useChats(userEmail, opts) {
   }
 
   const onPermanentlyDeleteChat = (chatId) => {
-    setChats((prev) => prev.filter((c) => c.id !== chatId))
+    setChats((prev) => {
+      const updated = prev.filter((c) => c.id !== chatId)
+      // Immediate persistence of full updated list (may be empty array)
+      try {
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(updated))
+        if (activeChatId === chatId) localStorage.removeItem(ACTIVE_CHAT_STORAGE_KEY)
+      } catch { /* ignore storage errors */ }
+      if (updated.length === 0) {
+        // Mark that we intentionally cleared chats so persist effect can write empty
+        intentionalEmptyRef.current = true
+      }
+      return updated
+    })
     if (activeChatId === chatId) setActiveChatId(null)
   }
 
@@ -136,10 +169,11 @@ export default function useChats(userEmail, opts) {
   }
 
   const onDelete = (chatId) => {
+    // Single centralized confirmation (UI menus should not duplicate)
     try {
       const ok = window.confirm('Permanently delete this chat? This action cannot be undone.')
       if (!ok) return
-  } catch { /* ignore confirm failures (non-browser) */ }
+    } catch { /* ignore confirm failures (non-browser) */ }
     onPermanentlyDeleteChat(chatId)
   }
 
